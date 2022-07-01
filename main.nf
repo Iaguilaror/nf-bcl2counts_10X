@@ -223,7 +223,6 @@ Channel
 
 process _pre01_mkfastq {
 //	label 'standard'
-  echo true
 
 	publishDir "${results_dir}/_pre01_mkfastq/",mode:"copy"
 
