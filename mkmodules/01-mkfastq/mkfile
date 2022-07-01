@@ -1,0 +1,11 @@
+MKSHELL="/bin/bash"
+
+$OUTDIR:Q: $INPUTDIR
+	cellranger mkfastq \
+		--id=$OUTDIR \
+		--run=$INPUTDIR \
+    --csv=$CSV \
+    --jobmode=local \
+    --localcores=$THREADS \
+    --localmem=$MAXMEM \
+	&& multiqc $OUTDIR
