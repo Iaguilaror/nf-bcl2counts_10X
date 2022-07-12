@@ -7,6 +7,8 @@ echo -e "======\n Testing NF execution \n======" \
 	--input_dir $input_dir \
 	--output_dir $output_directory \
   --simplecsv "test/data/tinytest/cellranger-tiny-bcl-simple-1.2.0.csv" \
+	--transcriptome "test/reference/refdata-gex-GRCh38-2020-A" \
+	--chemistry "SC3Pv2" \
   --threads 1 \
   --maxmem 1 \
 	-resume \
