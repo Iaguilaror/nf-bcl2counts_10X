@@ -6,8 +6,8 @@
 export TRANSCRIPTOME="test/reference/refdata-gex-GRCh38-2020-A/"
 export OUTDIR="results_count"
 export CHEMISTRY="SC3Pv2" ##Might be auto with real data
-export THREADS="8"
-export MAXMEM="15"
+export THREADS="1"
+export MAXMEM="8"
 ###
 
 echo "[>..] test running this module with data in test/data"
