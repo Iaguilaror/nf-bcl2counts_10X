@@ -2,8 +2,15 @@
 
 ## find every vcf file
 #find: -L option to include symlinks
-export inputdir=$(find -L . \
+dir=$(find -L . \
   -type d \
-  -wholename "*outs/fastq_path" )
-echo $OUTDIR \
-  | xargs mk
+  -name "*outs" )
+csv=$(find -L . \
+  -type f \
+  -wholename "$dir/*.csv")
+export sample=$(tail -n+2 $csv \
+| cut -f 2 -d "," \
+| tr "\n" "," \
+| sed "s#,\$##") \
+&& echo "$sample" \
+| xargs mk
