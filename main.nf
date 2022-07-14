@@ -289,7 +289,6 @@ process _001_count {
 	"""
 	export TRANSCRIPTOME="${transcriptome}"
 	export CHEMISTRY="${chemistry}"
-  export OUTDIR="results_count"
   export THREADS="${params.threads}"
   export MAXMEM="${params.maxmem}"
 	bash runmk.sh

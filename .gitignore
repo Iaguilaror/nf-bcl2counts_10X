@@ -26,6 +26,7 @@ test/results*
 
 ## ignore real data dirs
 real-data
+test/reference/refdata-gex-GRCh38-2020-A*
 
 ## ignore modules markedas REDO - means, in need of refactoring or remaking
 *REDO
