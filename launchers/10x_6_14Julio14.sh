@@ -1,10 +1,10 @@
-input_dir="real-data/10x_1_06marzo20/200306_NB501187_0052_AH7YTLBGX3"
-output_directory="real-data/10x_1_06marzo20/nfbcl2counts_10X_results"
+input_dir="real-data/10x_6_14Julio14/210714_NB501187_0086_AHVVKHBGXB/"
+output_directory="real-data/10x_6_14Julio14/nfbcl2counts_10X_results"
 
 nextflow run main.nf \
 	--input_dir $input_dir \
 	--output_dir $output_directory \
-  --simplecsv "real-data/10x_1_06marzo20/C1_10x_03_06_20.csv" \
+  --simplecsv "real-data/10x_6_14Julio14/C6_10x_6_14Jul21.csv" \
   --threads 12 \
   --maxmem 12 \
 	-resume \
