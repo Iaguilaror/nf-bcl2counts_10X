@@ -22,6 +22,7 @@ Pre-processing:
   _pre01_mkfastq
 
 Core-processing:
+_001_count
 
 Pos-processing
 
@@ -196,6 +197,16 @@ pipelinesummary['max memory mkfastq']			= params.maxmem
 log.info pipelinesummary.collect { k,v -> "${k.padRight(15)}: $v" }.join("\n")
 log.info "==========================================\nPipeline Start"
 
+/*
+Useful functions definition
+*/
+/* define a function for extracting the file name from a full path */
+/* The full path will be the one defined by the user to indicate where the reference file is located */
+def get_baseName(f) {
+	/* find where is the last appearance of "/", then extract the string +1 after this last appearance */
+  	f.substring(f.lastIndexOf('/') + 1);
+}
+
 /*//////////////////////////////
   PIPELINE START
 */
@@ -214,7 +225,7 @@ Channel
   .fromPath( "${params.simplecsv}" )
   .set{ simplecsv_sheet }
 
-/* _001a_runstar_genome1 */
+/* _pre01_mkfastq */
 /* Read mkfile module files */
 Channel
 	.fromPath("${workflow.projectDir}/mkmodules/01-mkfastq/*")
@@ -238,6 +249,46 @@ process _pre01_mkfastq {
   export OUTDIR="results_mkfastq"
   export INPUTDIR="${bcl}"
   export CSV="${csv}"
+  export THREADS="${params.threads}"
+  export MAXMEM="${params.maxmem}"
+	bash runmk.sh
+	"""
+
+}
+
+/* _001_count */
+/* Read mkfile module files */
+Channel
+	.fromPath("${workflow.projectDir}/mkmodules/02-count/*")
+	.toList()
+	.set{ mkfiles_001 }
+
+/* Load transcriptome into channel */
+Channel
+  .fromPath( "${params.transcriptome}" )
+  .set{ transcriptome_dir }
+
+/* Load chemistry into channel */
+Channel
+	.fromPath( "${params.chemistry}" )
+	.set{ chemistry_type }
+
+process _001_count {
+
+	publishDir "${results_dir}/_001_count/",mode:"copy"
+
+	input:
+  file fastq from results_pre01_mkfastq
+  file transcriptome from transcriptome_dir
+	file chemistry from chemistry_type
+  file mk_files from mkfiles_001
+
+	output:
+  file "*" into results_001_count
+
+	"""
+	export TRANSCRIPTOME="${transcriptome}"
+	export CHEMISTRY="${chemistry}"
   export THREADS="${params.threads}"
   export MAXMEM="${params.maxmem}"
 	bash runmk.sh
