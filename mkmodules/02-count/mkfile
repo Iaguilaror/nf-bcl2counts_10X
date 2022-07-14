@@ -13,17 +13,19 @@ MKSHELL="/bin/bash"
 # --localcores,Restricts cellranger to use specified number of cores to execute pipeline stages.
 # --localmem, Restricts cellranger to use specified amount of memory (in GB) to execute pipeline stages.
 # --chemistry, Assay configuration.
-$sample:Q:
+%_cellrangercounts:Q:
 	inputdir=$(find -L . \
 	  -type d \
 	  -wholename "*outs/fastq_path" ) \
-	&& echo "[DEBUG] Running cellrange count for $sample"
+	&& echo "[DEBUG] Running cellrange count for $stem"
 	cellranger count \
-		--id=$OUTDIR \
+		--id=$target \
 		--transcriptome=$TRANSCRIPTOME \
 		--fastqs=$inputdir \
-		--sample=$sample \
+		--sample=$stem \
 		--localcores=$THREADS \
 		--localmem=$MAXMEM \
 		--jobmode=local \
+		--no-bam \
+		--nosecondary \
 		--chemistry=$CHEMISTRY

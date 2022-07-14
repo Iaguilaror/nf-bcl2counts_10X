@@ -2,15 +2,12 @@
 
 ## find every vcf file
 #find: -L option to include symlinks
-dir=$(find -L . \
-  -type d \
-  -name "*outs" )
-csv=$(find -L . \
+find -L . \
   -type f \
-  -wholename "$dir/*.csv")
-export sample=$(tail -n+2 $csv \
-| cut -f 2 -d "," \
-| tr "\n" "," \
-| sed "s#,\$##") \
-&& echo "$sample" \
+  -name "input_samplesheet.csv" \
+| grep "/outs/" \
+| xargs tail -n+2 \
+| cut -d"," -f2 \
+| sort -u \
+| sed 's#$#_cellrangercounts#' \
 | xargs mk
