@@ -13,6 +13,7 @@ work*
 
 ## Ignore test subdirectories from mkmodules
 mkmodules/*/test/results/*
+mkmodules/*/test/results_count/*
 
 ## ignore intermediate and logs from tests
 test/data/*/intermediate/
@@ -25,6 +26,7 @@ test/results*
 
 ## ignore real data dirs
 real-data
+test/reference/refdata-gex-GRCh38-2020-A*
 
 ## ignore modules markedas REDO - means, in need of refactoring or remaking
 *REDO
