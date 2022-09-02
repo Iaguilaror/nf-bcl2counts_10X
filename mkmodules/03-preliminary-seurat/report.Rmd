@@ -1,0 +1,321 @@
+---
+title: "Preliminary Seurat Analysis"
+author: iaguilaror@gmail.com
+date: "`r Sys.time()`"
+output: pdf_document
+---
+
+# Start Seurat report
+
+Number of cells:
+```{r, echo = FALSE, message = FALSE}
+library( "Seurat" )
+library( "dplyr" )
+library( "ggpubr" )
+library( "ggplot2" )
+library( "hexbin" )
+library( "ggsci" )
+library( "cowplot" )
+
+input_dir <- "test/data/260_CRO_WTA_tonsil_cellrangercounts/"  # "test/data/test_sample_cellrangercounts/"
+
+# Leemos la data1
+cellranger.data <- Read10X( data.dir = paste0( input_dir, "/outs/filtered_feature_bc_matrix") )
+
+# Creamos objeto seurat
+seuobject <- CreateSeuratObject( counts = cellranger.data,
+                                 project = "this project")
+
+# Vemos numero de celulas
+table( seuobject$orig.ident ) %>% knitr::kable( )
+
+```
+
+Quality Control Metrics
+```{r, echo = FALSE, message = FALSE, warning=FALSE, fig.align = 'center'}
+
+# Revisamos el porcentaje de conteos que corresponden a genes mitocondriales
+seuobject[[ "percent.mt" ]] <- PercentageFeatureSet( object = seuobject,
+                                                     pattern = "^MT-" )
+
+# Visualizamos algunas metricas de control de calidad
+# Visualize QC metrics as a violin plot
+VlnPlot( object = seuobject,
+         features = c("nFeature_RNA", "nCount_RNA", "percent.mt"),
+         ncol = 3, pt.size = 0.01 )
+
+# # Vamos a comparar pares de features
+# # Por ejemplo, para cada celula, comparamos el numero de reads mapeadas, con el porcentaje de mapeos mitocondriales
+# plot1 <- FeatureScatter( object = seuobject,
+#                          feature1 = "nFeature_RNA",
+#                          feature2 = "percent.mt",
+#                          group.by = "orig.ident", pt.size = 1,
+#                          smooth = FALSE,
+#                          jitter = FALSE )
+# 
+# # Visualizamos
+# plot1 +
+#   geom_hline( yintercept = 5,
+#               linetype = "dashed" ) +
+#   geom_vline( xintercept = c(200, 2500),
+#               lty = "dashed" ) +
+#   geom_point( alpha = 0.1 )
+```
+
+# Panel QC
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c(4, 10) }
+
+# get max values for
+
+# creamos una funcion para el panel QC
+qcploter <- function( the_data ) {
+  # extraemos el dataframe a mano
+  scatter.df <- data.frame( identity = Idents( the_data ),
+                            nFeature_RNA = FetchData( the_data,
+                                                      "nFeature_RNA" ),
+                            nCount_RNA = FetchData( the_data,
+                                                    "nCount_RNA" ),
+                            percent.mt = FetchData( the_data,
+                                                    "percent.mt" ) ) 
+  
+  # creamos un panel para comparar metricas por celula
+  mitohexbin <- ggplot( data = scatter.df,
+                        mapping = aes( x = nFeature_RNA,
+                                       y = percent.mt,
+                                       # color = identity
+                        ) ) +
+    geom_hex( bins = 5e1 ) +
+    geom_hline( yintercept = 5,               # Se recomienda usar celulas con menos del 5% de porcentaje mitocondrial
+                linetype = "dashed" ) +
+    geom_vline( xintercept = c( 200, 2500 ),  # Se recomienda usar celulas entre 200 y 2,500 genes
+                lty = "dashed" ) +
+    scale_color_d3( ) +
+    scale_fill_gradient( low = "gray95", high = "black" ) +
+    labs( color = "Sample" ) +
+    theme_light( ) +
+    theme( 
+      strip.background = element_rect( fill = "white" ),
+      strip.text = element_text( colour = "black", size = 15 ),
+      legend.position = "none"
+      # strip.background = element_blank( ),
+      # strip.text = element_blank( ),
+      # legend.position = "top"
+    )
+  
+  # vis
+  # mitohexbin
+  
+  # creamos un panel para comparar metricas por celula
+  mitoscatter <- ggplot( data = scatter.df,
+                         mapping = aes( x = nFeature_RNA,
+                                        y = percent.mt,
+                                        color = identity ) ) +
+    geom_point( alpha = 0.2, size = 0.3 ) +
+    geom_hline( yintercept = 5,               # Se recomienda usar celulas con menos del 5% de porcentaje mitocondrial
+                linetype = "dashed" ) +
+    geom_vline( xintercept = c( 200, 2500 ),  # Se recomienda usar celulas entre 200 y 2,500 genes
+                lty = "dashed" ) +
+    scale_color_d3( ) +
+    labs( color = "Sample" ) +
+    theme_light( ) +
+    theme( 
+      # strip.background = element_rect( fill = "white" ),
+      # strip.text = element_text( colour = "black", size = 15 ),
+      legend.position = "none",
+      strip.background = element_blank( ),
+      strip.text = element_blank( ),
+      # legend.position = "top"
+    ) +
+    stat_cor( method = "pearson",
+              label.y.npc = "top",
+              label.x.npc = "center" )
+  
+  # graficamos correlacion 
+  featurecountscatter <- ggplot( data = scatter.df,
+                                 mapping = aes( x = nFeature_RNA,
+                                                y = nCount_RNA,
+                                                color = identity ) ) +
+    geom_point( alpha = 0.2, size = 0.3 ) +
+    scale_color_d3( ) +
+    labs( color = "Sample" ) +
+    theme_light( ) +
+    theme( 
+      strip.background = element_blank( ),
+      strip.text = element_blank( ),
+      legend.position = "none"
+    ) +
+    stat_cor( method = "pearson",
+              label.y.npc = "top",
+              label.x.npc = "center" )
+  
+  # Mostramos ambos graficos en un panel
+  plot_grid( mitohexbin,
+             mitoscatter,
+             featurecountscatter,
+             ncol = 1, align = "v" )
+}
+
+# viz
+qcploter( the_data = seuobject )
+
+```
+
+# After QC-basedfiltering
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c(4, 10) }
+# Procedemos a filtrar las celulas, de acuerdo a las metricas de control de calidad evaluadas arriba
+seuobject <- subset( x = seuobject,
+                     subset = nFeature_RNA > 200 &
+                       nFeature_RNA < 2500 &
+                       percent.mt < 5 )
+
+qcploter( the_data = seuobject )
+```
+
+# Normalize
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+
+
+## Normalizamos la data
+seuobject <- NormalizeData( object = seuobject,
+                            normalization.method = "LogNormalize",
+                            scale.factor = 10000 )
+
+
+# Nos quedamos con los 2000 genes mas variables dentro del dataset
+seuobject <- FindVariableFeatures( object = seuobject,
+                                   selection.method = "vst",
+                                   nfeatures = 2000 )
+
+# veamos los top10 genes mas variables
+top10 <- head( x = VariableFeatures( seuobject ),
+               n = 10, )
+
+# lo vemos en tabla
+knitr::kable( top10, col.names = "Top variable genes" )
+
+# Graficamos los genes de acuerdo a su nivel de expresion
+# plot variable features with and without labels
+scater1 <- VariableFeaturePlot( seuobject )
+
+# Destacamos los genes top10 (los mas variables dentro de los variables )
+scater2 <- LabelPoints( plot = scater1,
+                        points = top10,
+                        repel = TRUE )
+
+# Visualizamos
+scater2
+
+```
+
+# Run PCA
+
+Shown: First 5PC and the most important genes in each PC 
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# Sacamos los nombres de los genes
+all.genes <- rownames( seuobject )
+
+# Escalamos los datos, para que los genes con mucha expresion no dominen los analisis posteriores
+seuobject <- ScaleData( seuobject,
+                        features = all.genes )
+
+# Realizamos el PCA
+seuobject <- RunPCA( object = seuobject )
+
+# imprimimos los primeros 5 componentes principales
+# Y senialamos los 5 primeros genes que influyen en ese componente
+print( seuobject[["pca"]],
+       dims = 1:5,
+       nfeatures = 5 )
+
+```
+
+# Elbow plot para los PCs
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# HAcemos un elbow plot para ver la varianza explicada por cada PC
+ElbowPlot( seuobject )
+
+```
+
+# Peso (loadings) en los PCs
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# Observamos para N componentes, la influencia de los genes
+VizDimLoadings( object = seuobject,
+                dims = 1:2,
+                reduction = "pca" )
+```
+
+# PC1 vs PC2
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# Observamos el scater de los primeros 2 componentes
+DimPlot( object = seuobject,
+         reduction = "pca",
+         dims = c(1, 2) )
+```
+
+# Heatmaps for diff PCs
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# Cramos un heatmap para el PC1
+DimHeatmap( object = seuobject,
+            dims = 1,
+            cells = 500,
+            balanced = TRUE )
+
+# Puedes pedir varios heatmaps al mismo tiempo
+DimHeatmap( object = seuobject,
+            dims = 1:15,
+            cells = 500,
+            balanced = TRUE )
+```
+
+# UMAPping
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+
+seuobject <- FindNeighbors( seuobject,
+                            dims = 1:10 )
+seuobject <- FindClusters( seuobject,
+                           resolution = 0.5 )
+
+head( Idents( seuobject ), 5 )
+
+# hacemos el umap
+seuobject <- RunUMAP( seuobject,
+                      dims = 1:10 )
+
+# Vis
+DimPlot( object = seuobject,
+         reduction = "umap", pt.size = 1 )
+
+```
+
+# Se muestras los primeros 5 Marcadores de clusters
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+
+seuobject.markers <- FindAllMarkers( object = seuobject,
+                                     only.pos = TRUE,          # 
+                                     min.pct = 0.25,
+                                     logfc.threshold = 0.25 )  # le estamos pidiendo que solo analice los genes con un FC minimo de 0.25
+
+
+seuobject.markers %>%
+  group_by(cluster) %>%
+  slice_max( n = 5,
+             order_by = avg_log2FC ) %>% 
+  knitr::kable( )
+
+```
+
+# Heatmap para los 5 principales marcadores de cada PC
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# Primero saca los diez genes mas sobreexpresados de cada cluter de celulas
+top10 <- seuobject.markers %>%
+  group_by(cluster) %>%
+  top_n( n = 5,
+         wt = avg_log2FC )
+
+# Aqui ya hace el heatmap
+DoHeatmap( object = seuobject,
+           features = top10$gene )
+
+```
