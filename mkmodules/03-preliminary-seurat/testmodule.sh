@@ -3,8 +3,8 @@
 
 ###
 ## environment variable setting
-#export TRANSCRIPTOME="test/reference/refdata-gex-GRCh38-2020-A/"
-# export OUTDIR="results_count"
+export NFEATURES="0"
+export NNEIGHBORS="25"
 
 echo "[>..] test running this module with data in test/data"
 ## Remove old test results, if any; then create test/reults dir

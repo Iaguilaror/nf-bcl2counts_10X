@@ -1,14 +1,20 @@
 # This script exists as an interface to pass parameters to RMD in an ordered manner
 
 ## Read args from command line
-args = commandArgs(trailingOnly=TRUE)
+args = commandArgs( trailingOnly = TRUE )
 
 ## Uncomment For debugging only
 ## Comment for production mode only
-# args[1] <- "all_samples_trim_report.pdf" ## all_samples_trim_report.pdf files
+# args[1] <- "test/data/test_sample_cellrangercounts/" ## "test/data/test_sample_cellrangercounts/"
+# args[2] <- 0                                         ## 0 for testing pipeline; nFeature_RNA filter
+# args[3] <- 25                                        ## 25 for testing the pipeline; This determines the number of neighboring points used in local approximations 
+# args[4] <- "output.pdf"                              ## output.pdf files
 
 ## Passing args to named objects
-pdf_file <- args[1]
+input_counts <- args[1]
+nfeatures_cutoff <- args[2]
+nneighbors_forumap <- args[3]
+pdf_file <- args[4]
 rmd_file <- "report.Rmd" # maybe add manually always?
 
 # call the renderizer
