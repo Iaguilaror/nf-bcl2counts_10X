@@ -23,6 +23,7 @@ Pre-processing:
 
 Core-processing:
 _001_count
+_002_preliminary_seurat
 
 Pos-processing
 
@@ -80,6 +81,8 @@ params.input_dir = false  //if no inputh path is provided, value is false to pro
 params.help = false       //default is false to not trigger help message automatically at every run
 params.version = false    //default is false to not trigger version message automatically at every run
 params.simplecsv = false  //default is false to not trigger version message automatically at every run
+params.nfeatures = 200    //default is 200 as recommended by seurat tutorial on 2022
+params.nneighbors = 30    //default is 30 as described in http://127.0.0.1:29453/library/Seurat/html/RunUMAP.html for parameter n.neighbors
 params.threads = 1        //default is 1 thread per process
 params.maxmem = 1         //default is 1 GB per process
 
@@ -191,6 +194,8 @@ pipelinesummary['input directory']			= params.input_dir
 pipelinesummary['Results Dir']		= results_dir
 pipelinesummary['Intermediate Dir']		= intermediates_dir
 pipelinesummary['SimpleCSV samplesheet']			= params.simplecsv
+pipelinesummary['nfeatures for seurat']			= params.nfeatures
+pipelinesummary['nneighbors for seurat']			= params.nneighbors
 pipelinesummary['threads mkfastq']			= params.threads
 pipelinesummary['max memory mkfastq']			= params.maxmem
 /* print stored summary info */
@@ -291,6 +296,32 @@ process _001_count {
 	export CHEMISTRY="${chemistry}"
   export THREADS="${params.threads}"
   export MAXMEM="${params.maxmem}"
+	bash runmk.sh
+	"""
+
+}
+
+/* _002_preliminary_seurat */
+/* Read mkfile module files */
+Channel
+	.fromPath("${workflow.projectDir}/mkmodules/03-preliminary-seurat/*")
+	.toList()
+	.set{ mkfiles_002 }
+
+process _002_preliminary_seurat {
+
+	publishDir "${results_dir}/_002_preliminary-seurat/",mode:"copy"
+
+	input:
+  file countsdir from results_001_count
+  file mk_files from mkfiles_002
+
+	output:
+  file "*.pdf" into results_002_preliminary_seurat
+
+	"""
+	export NFEATURES="${params.nfeatures}"
+	export NNEIGHBORS="${params.nneighbors}"
 	bash runmk.sh
 	"""
 
