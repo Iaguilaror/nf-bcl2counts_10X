@@ -289,7 +289,7 @@ process _001_count {
   file mk_files from mkfiles_001
 
 	output:
-  file "*" into results_001_count
+  file "*" into results_001_count mode flatten
 
 	"""
 	export TRANSCRIPTOME="${transcriptome}"

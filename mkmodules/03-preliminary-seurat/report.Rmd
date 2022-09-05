@@ -1,5 +1,5 @@
 ---
-title: "Preliminary Seurat Analysis"
+title: "Preliminary Seurat Analysis\n sample: `r input_counts`"
 author: iaguilaror@gmail.com
 date: "`r Sys.time()`"
 output: pdf_document
@@ -166,7 +166,7 @@ qcploter( the_data = seuobject )
 ```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c(4, 10) }
 # Procedemos a filtrar las celulas, de acuerdo a las metricas de control de calidad evaluadas arriba
 seuobject <- subset( x = seuobject,
-                     subset = nFeature_RNA > nfeatures_cutoff &
+                     subset = nFeature_RNA > as.numeric( nfeatures_cutoff ) &
                        nFeature_RNA < 2500 &
                        percent.mt < 5 )
 
@@ -282,7 +282,7 @@ head( Idents( seuobject ), 5 )
 
 # hacemos el umap
 seuobject <- RunUMAP( seuobject,
-                      n.neighbors = nneighbors_forumap,
+                      n.neighbors = as.numeric( nneighbors_forumap ),
                       dims = 1:10 )
 
 # Vis
