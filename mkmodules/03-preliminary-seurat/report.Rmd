@@ -334,9 +334,9 @@ if ( nrow( seuobject.markers ) > 0 ) {
 # Etiquetamos los clusters UMAP con singleR, usando como referencia celldex::HumanPrimaryCellAtlasData( )$label.main
 ```{r, echo = FALSE, message = FALSE, warning = FALSE }
 # Practicamos el etiquetado automatico
-p_load( "SingleR",
-        "celldex",
-        "SingleCellExperiment" )
+library( "SingleR" )
+library( "celldex" )
+library( "SingleCellExperiment" )
 
 # creamos el objeto con la referencia
 ref <- celldex::HumanPrimaryCellAtlasData( )
