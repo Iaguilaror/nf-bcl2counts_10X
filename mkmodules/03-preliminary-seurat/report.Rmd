@@ -16,6 +16,7 @@ library( "ggplot2" )
 library( "hexbin" )
 library( "ggsci" )
 library( "cowplot" )
+library( "pacman" )
 
 input_dir <- input_counts #"test/data/260_CRO_WTA_tonsil_cellrangercounts/"  # "test/data/test_sample_cellrangercounts/"
 fulldir <- paste0( input_dir, "/outs/filtered_feature_bc_matrix")
