@@ -329,3 +329,47 @@ if ( nrow( seuobject.markers ) > 0 ) {
 }
 
 ```
+
+# Etiquetamos los clusters UMAP con singleR, usando como referencia celldex::HumanPrimaryCellAtlasData( )$label.main
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# Practicamos el etiquetado automatico
+p_load( "SingleR",
+        "celldex",
+        "SingleCellExperiment" )
+
+# creamos el objeto con la referencia
+ref <- celldex::HumanPrimaryCellAtlasData( )
+  
+# tag the seurat data
+tagged <- SingleR( test = as.SingleCellExperiment( x = seuobject ),
+                   ref = ref, labels = ref$label.main )
+
+
+# view tagged
+tagged
+
+# label the seurat object
+seuobject$singler_labels <- tagged$labels
+
+# note that you can set `label = TRUE` or use the LabelClusters function to help label
+# individual clusters
+DimPlot( seuobject, reduction = "umap", label = TRUE, group.by = "singler_labels" )
+```
+
+# Etiquetamos los clusters UMAP con singleR, usando como referencia celldex::HumanPrimaryCellAtlasData( )$label.fine
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# tag the seurat data
+tagged2 <- SingleR( test = as.SingleCellExperiment( x = seuobject ),
+                   ref = ref, labels = ref$label.fine )
+
+
+# view tagged
+tagged2
+
+# label the seurat object
+seuobject$singler_labels_fine <- tagged2$labels
+
+# note that you can set `label = TRUE` or use the LabelClusters function to help label
+# individual clusters
+DimPlot( seuobject, reduction = "umap", label = TRUE, group.by = "singler_labels_fine" )
+```
