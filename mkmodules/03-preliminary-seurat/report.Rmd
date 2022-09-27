@@ -18,7 +18,8 @@ library( "ggsci" )
 library( "cowplot" )
 library( "pacman" )
 
-input_dir <- input_counts #"test/data/260_CRO_WTA_tonsil_cellrangercounts/"  # "test/data/test_sample_cellrangercounts/"
+#uncomment for debug onlye
+input_dir <- input_counts
 fulldir <- paste0( input_dir, "/outs/filtered_feature_bc_matrix")
 
 # Leemos la data1
@@ -33,7 +34,7 @@ table( seuobject$orig.ident ) %>% knitr::kable( )
 
 ```
 
-Quality Control Metrics
+# Quality Control Metrics
 ```{r, echo = FALSE, message = FALSE, warning=FALSE, fig.align = 'center'}
 
 # Revisamos el porcentaje de conteos que corresponden a genes mitocondriales
@@ -173,7 +174,10 @@ seuobject <- subset( x = seuobject,
 
 qcploter( the_data = seuobject )
 ```
-
+# Ncells after filtering
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+table( seuobject$orig.ident ) %>% knitr::kable( )
+```
 # Normalize
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE }
@@ -340,7 +344,7 @@ library( "SingleCellExperiment" )
 
 # creamos el objeto con la referencia
 ref <- celldex::HumanPrimaryCellAtlasData( )
-  
+
 # tag the seurat data
 tagged <- SingleR( test = as.SingleCellExperiment( x = seuobject ),
                    ref = ref, labels = ref$label.main )
@@ -361,7 +365,7 @@ DimPlot( seuobject, reduction = "umap", label = TRUE, group.by = "singler_labels
 ```{r, echo = FALSE, message = FALSE, warning = FALSE }
 # tag the seurat data
 tagged2 <- SingleR( test = as.SingleCellExperiment( x = seuobject ),
-                   ref = ref, labels = ref$label.fine )
+                    ref = ref, labels = ref$label.fine )
 
 
 # view tagged
@@ -373,4 +377,72 @@ seuobject$singler_labels_fine <- tagged2$labels
 # note that you can set `label = TRUE` or use the LabelClusters function to help label
 # individual clusters
 DimPlot( seuobject, reduction = "umap", label = TRUE, group.by = "singler_labels_fine" )
+```
+# Cambiamos las identidades de las celulas despues de la anotacion
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# duplicate object
+seuobject_labeled <- seuobject
+
+# Re-identify
+Idents( object = seuobject_labeled ) <-  seuobject$singler_labels_fine
+
+labeled_summary <- data.frame( cell_type = Idents( object = seuobject_labeled ) ) %>% 
+  group_by( cell_type ) %>% 
+  summarise( n_cells = n( ) )
+
+# how many cells per label
+labeled_summary %>% 
+  ggplot( data = .,
+          mapping = aes( x = cell_type,
+                         y = n_cells ) ) +
+  geom_col( fill = "gray50",
+            color = "gray50" ) +
+  geom_text( mapping = aes( label = n_cells ), nudge_y = max( labeled_summary$n_cells ) / 10 ) +
+  scale_y_continuous( limits = c(0, max( labeled_summary$n_cells ) * 1.15 ),
+                      expand = c( 0, 0 ) ) +
+  labs( title = "Number of cells per label",
+        caption = paste( "Total cells:", sum( labeled_summary$n_cells ) ) ) +
+  theme_classic( ) +
+  theme( axis.text.x = element_text( angle = 90, hjust = 1, vjust = 0.5 ) )
+
+```
+
+# Se muestras los primeros 10 Marcadores de clusters
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+
+seuobject_labeled.markers <- FindAllMarkers( object = seuobject_labeled,
+                                     only.pos = TRUE,          #
+                                     min.pct = 0.25,
+                                     logfc.threshold = 0.25 )  # le estamos pidiendo que solo analice los genes con un FC minimo de 0.25
+
+
+# revisa si hay genes marcadores, si no hay, se salta esta parte
+if ( nrow( seuobject_labeled.markers ) > 0 ) {
+  seuobject_labeled.markers %>%
+    group_by(cluster) %>%
+    slice_max( n = 10,
+               order_by = avg_log2FC ) %>%
+    knitr::kable( )  
+}
+
+
+```
+
+# Heatmap para los 10 principales marcadores de cada PC
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# revisa si hay genes marcadores, si no hay, se salta esta parte
+if ( nrow( seuobject_labeled.markers ) > 0 ) {
+  
+  # Primero saca los diez genes mas sobreexpresados de cada cluter de celulas
+  top10 <- seuobject_labeled.markers %>%
+    group_by(cluster) %>%
+    top_n( n = 10,
+           wt = avg_log2FC )
+  
+  # Aqui ya hace el heatmap
+  DoHeatmap( object = seuobject_labeled,
+             features = top10$gene ) +
+    NoLegend( )
+}
+
 ```
