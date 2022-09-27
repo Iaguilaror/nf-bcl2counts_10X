@@ -391,10 +391,10 @@ labeled_summary <- data.frame( cell_type = Idents( object = seuobject_labeled ) 
   summarise( n_cells = n( ) )
 
 # how many cells per label
-labeled_summary %>% 
-  ggplot( data = .,
-          mapping = aes( x = cell_type,
-                         y = n_cells ) ) +
+
+cell_bars <-   ggplot( data = labeled_summary,
+                       mapping = aes( x = cell_type,
+                                      y = n_cells ) ) +
   geom_col( fill = "gray50",
             color = "gray50" ) +
   geom_text( mapping = aes( label = n_cells ), nudge_y = max( labeled_summary$n_cells ) / 10 ) +
@@ -405,15 +405,18 @@ labeled_summary %>%
   theme_classic( ) +
   theme( axis.text.x = element_text( angle = 90, hjust = 1, vjust = 0.5 ) )
 
+#Viz
+cell_bars
+
 ```
 
 # Se muestras los primeros 10 Marcadores de clusters
 ```{r, echo = FALSE, message = FALSE, warning = FALSE }
 
 seuobject_labeled.markers <- FindAllMarkers( object = seuobject_labeled,
-                                     only.pos = TRUE,          #
-                                     min.pct = 0.25,
-                                     logfc.threshold = 0.25 )  # le estamos pidiendo que solo analice los genes con un FC minimo de 0.25
+                                             only.pos = TRUE,          #
+                                             min.pct = 0.25,
+                                             logfc.threshold = 0.25 )  # le estamos pidiendo que solo analice los genes con un FC minimo de 0.25
 
 
 # revisa si hay genes marcadores, si no hay, se salta esta parte
@@ -441,8 +444,10 @@ if ( nrow( seuobject_labeled.markers ) > 0 ) {
   
   # Aqui ya hace el heatmap
   DoHeatmap( object = seuobject_labeled,
-             features = top10$gene ) +
-    NoLegend( )
+             features = top10$gene,
+             size = 2, angle = 90 ) +
+    NoLegend( ) +
+    theme( axis.text = element_text( size = 2 ) )
 }
 
 ```
