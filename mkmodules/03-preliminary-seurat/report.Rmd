@@ -398,14 +398,14 @@ cell_bars <- ggplot( data = labeled_summary,
                      mapping = aes( x = cell_type,
                                     y = n_cells ) ) +
   geom_col( fill = "gray50",
-            color = "gray50" ) #+
-# geom_text( mapping = aes( label = n_cells ), nudge_y = max( labeled_summary$n_cells ) / 10 ) +
-# scale_y_continuous( limits = c(0, max( labeled_summary$n_cells ) * 1.15 ),
-#                     expand = c( 0, 0 ) ) +
-# labs( title = "Number of cells per label",
-#       caption = paste( "Total cells:", sum( labeled_summary$n_cells ) ) ) +
-# theme_classic( ) +
-# theme( axis.text.x = element_text( angle = 90, hjust = 1, vjust = 0.5 ) )
+            color = "gray50" ) +
+geom_text( mapping = aes( label = n_cells ), nudge_y = max( labeled_summary$n_cells ) / 10 ) +
+scale_y_continuous( limits = c(0, max( labeled_summary$n_cells ) * 1.15 ),
+                    expand = c( 0, 0 ) ) +
+labs( title = "Number of cells per label",
+      caption = paste( "Total cells:", sum( labeled_summary$n_cells ) ) ) +
+theme_classic( ) +
+theme( axis.text.x = element_text( angle = 90, hjust = 1, vjust = 0.5 ) )
 
 #Viz
 cell_bars
