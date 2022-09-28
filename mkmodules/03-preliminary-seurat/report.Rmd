@@ -432,7 +432,7 @@ if ( nrow( seuobject_labeled.markers ) > 0 ) {
 ```
 
 # Heatmap para los 10 principales marcadores de cada PC
-```{r, echo = FALSE, message = FALSE, warning = FALSE }
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c(10, 10) }
 # revisa si hay genes marcadores, si no hay, se salta esta parte
 if ( nrow( seuobject_labeled.markers ) > 0 ) {
   
@@ -445,7 +445,7 @@ if ( nrow( seuobject_labeled.markers ) > 0 ) {
   # Aqui ya hace el heatmap
   DoHeatmap( object = seuobject_labeled,
              features = top10$gene,
-             size = 1, angle = 90 ) +
+             size = 2, angle = 90 ) +
     NoLegend( ) +
     theme( axis.text = element_text( size = 2 ) )
 }
