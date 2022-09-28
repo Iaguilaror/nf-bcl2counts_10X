@@ -362,7 +362,7 @@ DimPlot( seuobject, reduction = "umap", label = TRUE, group.by = "singler_labels
 ```
 
 # Etiquetamos los clusters UMAP con singleR, usando como referencia celldex::HumanPrimaryCellAtlasData( )$label.fine
-```{r, echo = FALSE, message = FALSE, warning = FALSE }
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 10, 10 ) }
 # tag the seurat data
 tagged2 <- SingleR( test = as.SingleCellExperiment( x = seuobject ),
                     ref = ref, labels = ref$label.fine )
