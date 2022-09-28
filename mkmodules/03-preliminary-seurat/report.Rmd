@@ -379,12 +379,12 @@ seuobject$singler_labels_fine <- tagged2$labels
 DimPlot( seuobject, reduction = "umap", label = TRUE, group.by = "singler_labels_fine" )
 ```
 # Cambiamos las identidades de las celulas despues de la anotacion
-```{r, echo = FALSE, message = FALSE, warning = FALSE }
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 7, 7 ) }
 # duplicate object
 seuobject_labeled <- seuobject
 
 # Re-identify
-Idents( object = seuobject_labeled ) <-  seuobject$singler_labels_fine
+Idents( object = seuobject_labeled ) <- seuobject$singler_labels_fine
 
 labeled_summary <- data.frame( cell_type = Idents( object = seuobject_labeled ) ) %>% 
   group_by( cell_type ) %>% 
@@ -392,18 +392,18 @@ labeled_summary <- data.frame( cell_type = Idents( object = seuobject_labeled ) 
 
 # how many cells per label
 
-cell_bars <-   ggplot( data = labeled_summary,
-                       mapping = aes( x = cell_type,
-                                      y = n_cells ) ) +
+cell_bars <- ggplot( data = labeled_summary,
+                     mapping = aes( x = cell_type,
+                                    y = n_cells ) ) +
   geom_col( fill = "gray50",
-            color = "gray50" ) +
-  geom_text( mapping = aes( label = n_cells ), nudge_y = max( labeled_summary$n_cells ) / 10 ) +
-  scale_y_continuous( limits = c(0, max( labeled_summary$n_cells ) * 1.15 ),
-                      expand = c( 0, 0 ) ) +
-  labs( title = "Number of cells per label",
-        caption = paste( "Total cells:", sum( labeled_summary$n_cells ) ) ) +
-  theme_classic( ) +
-  theme( axis.text.x = element_text( angle = 90, hjust = 1, vjust = 0.5 ) )
+            color = "gray50" ) #+
+# geom_text( mapping = aes( label = n_cells ), nudge_y = max( labeled_summary$n_cells ) / 10 ) +
+# scale_y_continuous( limits = c(0, max( labeled_summary$n_cells ) * 1.15 ),
+#                     expand = c( 0, 0 ) ) +
+# labs( title = "Number of cells per label",
+#       caption = paste( "Total cells:", sum( labeled_summary$n_cells ) ) ) +
+# theme_classic( ) +
+# theme( axis.text.x = element_text( angle = 90, hjust = 1, vjust = 0.5 ) )
 
 #Viz
 cell_bars
