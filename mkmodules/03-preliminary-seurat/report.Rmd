@@ -449,7 +449,7 @@ if ( nrow( seuobject_labeled.markers ) > 0 ) {
              features = top10$gene,
              size = 2, angle = 90 ) +
     NoLegend( ) +
-    theme( axis.text = element_text( size = 2 ) )
+    theme( axis.text = element_text( size = 4 ) )
 }
 
 ```
