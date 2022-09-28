@@ -378,7 +378,9 @@ seuobject$singler_labels_fine <- tagged2$labels
 # individual clusters
 DimPlot( seuobject, reduction = "umap", label = TRUE, group.by = "singler_labels_fine" )
 ```
-# Cambiamos las identidades de las celulas despues de la anotacion
+
+# Cambiamos las identidades de las celulas despues de la anotacion  
+
 ```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 7, 7 ) }
 # duplicate object
 seuobject_labeled <- seuobject
