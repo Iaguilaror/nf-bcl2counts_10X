@@ -15,6 +15,7 @@ library( "ggpubr" )
 library( "ggplot2" )
 library( "hexbin" )
 library( "ggsci" )
+library( "scales" )
 library( "cowplot" )
 library( "pacman" )
 
@@ -245,7 +246,7 @@ ElbowPlot( seuobject )
 ```
 
 # Peso (loadings) en los PCs
-```{r, echo = FALSE, message = FALSE, warning = FALSE }
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 10, 10 ) }
 # Observamos para N componentes, la influencia de los genes
 VizDimLoadings( object = seuobject,
                 dims = 1:2,
@@ -276,7 +277,7 @@ DimHeatmap( object = seuobject,
 ```
 
 # UMAPping
-```{r, echo = FALSE, message = FALSE, warning = FALSE }
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 10, 10 ) }
 
 seuobject <- FindNeighbors( seuobject,
                             dims = 1:10 )
@@ -399,16 +400,58 @@ cell_bars <- ggplot( data = labeled_summary,
                                     y = n_cells ) ) +
   geom_col( fill = "gray50",
             color = "gray50" ) +
-geom_text( mapping = aes( label = n_cells ), nudge_y = max( labeled_summary$n_cells ) / 10 ) +
-scale_y_continuous( limits = c(0, max( labeled_summary$n_cells ) * 1.15 ),
-                    expand = c( 0, 0 ) ) +
-labs( title = "Number of cells per label",
-      caption = paste( "Total cells:", sum( labeled_summary$n_cells ) ) ) +
-theme_classic( ) +
-theme( axis.text.x = element_text( angle = 90, hjust = 1, vjust = 0.5 ) )
+  geom_text( mapping = aes( label = n_cells ), nudge_y = max( labeled_summary$n_cells ) / 10 ) +
+  scale_y_continuous( limits = c(0, max( labeled_summary$n_cells ) * 1.15 ),
+                      expand = c( 0, 0 ) ) +
+  labs( title = "Number of cells per label",
+        caption = paste( "Total cells:", sum( labeled_summary$n_cells ) ) ) +
+  theme_classic( ) +
+  theme( axis.text.x = element_text( angle = 90, hjust = 1, vjust = 0.5 ) )
 
 #Viz
-cell_bars
+# cell_bars
+
+```
+
+# Comparamos la concordancia entre cluster umap y label SingleR  
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 14, 14 ) }
+# Obtenemos las columnas relevantes
+cluster_compare_data <- data.frame( seuobject$seurat_clusters,
+                                    seuobject.singler_labels_fine = factor( seuobject$singler_labels_fine, levels = labeled_summary$cell_type ) )
+
+# summarise the combinations
+cluster_compare_summarised <- cluster_compare_data %>% 
+  group_by( seuobject.singler_labels_fine,
+            seuobject.seurat_clusters ) %>% 
+  summarise( n_cells = n( ) ) %>% 
+  ungroup( ) %>% 
+  group_by( seuobject.singler_labels_fine ) %>% 
+  mutate( singleR_label_total = sum( n_cells ),
+          singleR_label_percentage = n_cells / singleR_label_total )
+
+# clustering concordance plot
+clustering_heatmap <- ggplot( data = cluster_compare_summarised,
+        mapping = aes( x = seuobject.singler_labels_fine,
+                       y = seuobject.seurat_clusters,
+                       fill = singleR_label_percentage,
+                       label = percent( singleR_label_percentage, accuracy = 0.1 ) ) ) +
+  geom_tile( ) +
+  geom_text( ) +
+  scale_fill_gradient( low = "skyblue",
+                       high = "limegreen",
+                       limits = c( 0, 1 ),
+                       label = percent ) +
+  theme_light( ) +
+  theme( axis.text.x = element_text( angle = 90, hjust = 1 ),
+         panel.grid = element_blank( ),
+         legend.position = "top" )
+
+# make a panel
+clustering_panel <- plot_grid( cell_bars, clustering_heatmap, ncol = 1, align = "v" )
+
+# Viz
+clustering_panel
 
 ```
 
