@@ -18,10 +18,12 @@ library( "ggsci" )
 library( "scales" )
 library( "cowplot" )
 library( "pacman" )
+library( "stringr" )
+library( "tidyr" )
 
 #uncomment for debug onlye
 input_dir <- input_counts
-fulldir <- paste0( input_dir, "/outs/filtered_feature_bc_matrix")
+fulldir <- paste0( input_dir, dir_to_process )
 
 # Leemos la data1
 cellranger.data <- Read10X( data.dir = fulldir )
@@ -307,8 +309,8 @@ labeled_summary1 <- data.frame( cell_type = Idents( object = seuobject ) ) %>%
 # how many cells per label
 
 cell_bars1 <- ggplot( data = labeled_summary1,
-                     mapping = aes( x = cell_type,
-                                    y = n_cells ) ) +
+                      mapping = aes( x = cell_type,
+                                     y = n_cells ) ) +
   geom_col( fill = "gray50",
             color = "gray50" ) +
   geom_text( mapping = aes( label = n_cells ), nudge_y = max( labeled_summary1$n_cells ) / 10 ) +
@@ -360,6 +362,16 @@ if ( nrow( seuobject.markers ) > 0 ) {
 }
 
 ```
+# Mostramos la distribucion de transcritos entre agrupamientos
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 10, 10 )  }
+genes_of_interest <- c( "CCR7", "CD45", "CD28", "CD95")
+
+# for testing only, find genes
+rownames( seuobject )[ rownames( seuobject ) %>% str_detect( pattern = "CD4.*" ) ]
+
+
+RidgePlot( object = seuobject, features = genes_of_interest )
+```
 
 # Etiquetamos los clusters UMAP con singleR, usando como referencia celldex::HumanPrimaryCellAtlasData( )$label.main
 ```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 10, 10 )  }
@@ -385,9 +397,15 @@ seuobject$singler_labels <- tagged$labels
 # note that you can set `label = TRUE` or use the LabelClusters function to help label
 # individual clusters
 DimPlot( seuobject, reduction = "umap", label = TRUE, group.by = "singler_labels" )
+
+# Viz by expression
+# Re-identify
+seuobject_labeled1 <- seuobject
+Idents( object = seuobject_labeled1 ) <- seuobject$singler_labels
+RidgePlot( object = seuobject_labeled1, features = genes_of_interest )
 ```
 
-# Etiquetamos los clusters UMAP con singleR, usando como referencia celldex::HumanPrimaryCellAtlasData( )$label.fine
+#  DEPRECATED Etiquetamos los clusters UMAP con singleR, usando como referencia celldex::HumanPrimaryCellAtlasData( )$label.fine
 ```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 10, 10 ) }
 # tag the seurat data
 tagged2 <- SingleR( test = as.SingleCellExperiment( x = seuobject ),
@@ -403,6 +421,12 @@ seuobject$singler_labels_fine <- tagged2$labels
 # note that you can set `label = TRUE` or use the LabelClusters function to help label
 # individual clusters
 DimPlot( seuobject, reduction = "umap", label = TRUE, group.by = "singler_labels_fine" )
+
+# Viz by expression
+# Re-identify
+seuobject_labeled2 <- seuobject
+Idents( object = seuobject_labeled2 ) <- seuobject$singler_labels_fine
+RidgePlot( object = seuobject_labeled2, features = genes_of_interest )
 ```
 
 # Cambiamos las identidades de las celulas despues de la anotacion  
@@ -412,7 +436,7 @@ DimPlot( seuobject, reduction = "umap", label = TRUE, group.by = "singler_labels
 seuobject_labeled <- seuobject
 
 # Re-identify
-Idents( object = seuobject_labeled ) <- seuobject$singler_labels_fine
+Idents( object = seuobject_labeled ) <- seuobject$singler_labels
 
 labeled_summary <- data.frame( cell_type = Idents( object = seuobject_labeled ) ) %>% 
   group_by( cell_type ) %>% 
@@ -443,24 +467,27 @@ cell_bars <- ggplot( data = labeled_summary,
 ```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 14, 14 ) }
 # Obtenemos las columnas relevantes
 cluster_compare_data <- data.frame( seuobject$seurat_clusters,
-                                    seuobject.singler_labels_fine = factor( seuobject$singler_labels_fine, levels = labeled_summary$cell_type ) )
+                                    seuobject.singler_labels = factor( seuobject$singler_labels,
+                                                                       levels = labeled_summary$cell_type ),
+                                    seuobject$singler_labels_fine  ) %>% 
+  mutate( cell_tag = row.names( . ) )
 
 # summarise the combinations
 cluster_compare_summarised <- cluster_compare_data %>% 
-  group_by( seuobject.singler_labels_fine,
+  group_by( seuobject.singler_labels,
             seuobject.seurat_clusters ) %>% 
   summarise( n_cells = n( ) ) %>% 
   ungroup( ) %>% 
-  group_by( seuobject.singler_labels_fine ) %>% 
+  group_by( seuobject.singler_labels ) %>% 
   mutate( singleR_label_total = sum( n_cells ),
           singleR_label_percentage = n_cells / singleR_label_total )
 
 # clustering concordance plot
 clustering_heatmap <- ggplot( data = cluster_compare_summarised,
-        mapping = aes( x = seuobject.singler_labels_fine,
-                       y = seuobject.seurat_clusters,
-                       fill = singleR_label_percentage,
-                       label = percent( singleR_label_percentage, accuracy = 0.1 ) ) ) +
+                              mapping = aes( x = seuobject.singler_labels,
+                                             y = seuobject.seurat_clusters,
+                                             fill = singleR_label_percentage,
+                                             label = percent( singleR_label_percentage, accuracy = 0.1 ) ) ) +
   geom_tile( ) +
   geom_text( ) +
   scale_fill_gradient( low = "skyblue",
@@ -517,7 +544,7 @@ final_panel_heatmap <- plot_grid( clustering_panel,
 
 # Viz
 final_panel_heatmap
- 
+
 ```
 
 # Se muestras los primeros 10 Marcadores de clusters
@@ -561,3 +588,112 @@ if ( nrow( seuobject_labeled.markers ) > 0 ) {
 }
 
 ```
+
+# Visualizamos la expresion de diferentes genes en diferentes clusters
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c(10, 10) }
+# Counts <- GetAssayData( object = seuobject,
+#                                    slot = 'counts' )$SCT@counts
+
+# sacar los conteos
+counts.df <- as.data.frame( seuobject@assays$RNA@counts )
+
+# calcular Total reads per sample
+total_per_sample <- data.frame( total_counts = colSums( counts.df ) ) %>% 
+  mutate( cell_tag = row.names( . ) )
+
+# calcular el vector logico de las filas de interes
+rows_of_interest <- rownames( counts.df ) %in% genes_of_interest
+
+# sacar conteos de interes
+counts_of_interest <- counts.df[ rows_of_interest, ]
+
+# pasamos a formato long
+counts_of_interest_long <- counts_of_interest %>% 
+  mutate( feature = rownames( . ) ) %>% 
+  pivot_longer( data = .,
+                cols = -feature,
+                names_to = "cell_tag",
+                values_to = "counts" ) %>% 
+  left_join( x = .,
+             y = cluster_compare_data,
+             by = "cell_tag" ) %>% 
+  left_join( x = .,
+             y = total_per_sample,
+             by = "cell_tag" ) %>% 
+  mutate( counts_un_total=  counts / total_counts,
+          TPM = counts_un_total * 1e6 )
+
+# create a theme
+mytheme1 <- theme( axis.text.x = element_text( angle = 90, hjust = 0.5, vjust = 0.5 ) )
+
+# Total counts by tag
+ggplot( data = counts_of_interest_long %>% 
+          select( -feature ) %>% 
+          unique( ),
+        mapping = aes( x = seuobject.seurat_clusters,
+                       y = total_counts ) ) + 
+  geom_violin( fill = "skyblue" ) +
+  theme_classic( ) +
+  mytheme1
+
+# Total counts by tag
+ggplot( data = counts_of_interest_long %>% 
+          select( -feature ) %>% 
+          unique( ),
+        mapping = aes( x = seuobject.singler_labels,
+                       y = total_counts ) ) + 
+  geom_violin( fill = "skyblue" ) +
+  theme_classic( ) +
+  mytheme1
+
+# Total counts by tag
+ggplot( data = counts_of_interest_long %>% 
+          select( -feature ) %>% 
+          unique( ),
+        mapping = aes( x = seuobject.singler_labels_fine,
+                       y = total_counts ) ) + 
+  geom_violin( fill = "skyblue" ) +
+  theme_classic( ) +
+  mytheme1
+
+### Viz of TPM by group ----
+ggplot( data = counts_of_interest_long,
+        mapping = aes( x = seuobject.seurat_clusters,
+                       y = TPM,
+                       fill = feature ) ) +
+  geom_boxplot( ) +
+  theme_light( ) +
+  facet_wrap( ~feature, ncol = 1, strip.position = "left" ) +
+  theme( legend.position = "none",
+         strip.background = element_rect( fill = "white", color = "black" ),
+         strip.text = element_text( color = "black" ) ) +
+  mytheme1
+
+### Viz of TPM by group ----
+ggplot( data = counts_of_interest_long,
+        mapping = aes( x = seuobject.singler_labels,
+                       y = TPM,
+                       fill = feature ) ) +
+  geom_boxplot( ) +
+  theme_light( ) +
+  facet_wrap( ~feature, ncol = 1, strip.position = "left" ) +
+  theme( legend.position = "none",
+         strip.background = element_rect( fill = "white", color = "black" ),
+         strip.text = element_text( color = "black" ) ) +
+  mytheme1
+
+### Viz of TPM by group ----
+ggplot( data = counts_of_interest_long,
+        mapping = aes( x = seuobject.singler_labels_fine,
+                       y = TPM,
+                       fill = feature ) ) +
+  geom_boxplot( ) +
+  theme_light( ) +
+  facet_wrap( ~feature, ncol = 1, strip.position = "left" ) +
+  theme( legend.position = "none",
+         strip.background = element_rect( fill = "white", color = "black" ),
+         strip.text = element_text( color = "black" ) ) +
+  mytheme1
+
+```
+

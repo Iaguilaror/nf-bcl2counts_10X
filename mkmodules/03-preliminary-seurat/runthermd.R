@@ -17,6 +17,9 @@ nneighbors_forumap <- args[3]
 pdf_file <- args[4]
 rmd_file <- "report.Rmd" # maybe add manually always?
 
+# name of the dir to process
+dir_to_process <- "/outs/filtered_feature_bc_matrix"
+
 # call the renderizer
 rmarkdown::render( input = rmd_file,
                   output_file = pdf_file,
