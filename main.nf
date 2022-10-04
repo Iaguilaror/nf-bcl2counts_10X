@@ -24,6 +24,7 @@ Pre-processing:
 Core-processing:
 _001_count
 _002_preliminary_seurat
+_002b_preliminary_seurat_raw
 
 Pos-processing
 
@@ -289,7 +290,7 @@ process _001_count {
   file mk_files from mkfiles_001
 
 	output:
-  file "*" into results_001_count mode flatten
+  file "*" into results_001_count, results_001_count_again  mode flatten
 
 	"""
 	export TRANSCRIPTOME="${transcriptome}"
@@ -317,7 +318,33 @@ process _002_preliminary_seurat {
   file mk_files from mkfiles_002
 
 	output:
-  file "*.pdf" into results_002_preliminary_seurat
+  file "*.pdf"
+
+	"""
+	export NFEATURES="${params.nfeatures}"
+	export NNEIGHBORS="${params.nneighbors}"
+	bash runmk.sh
+	"""
+
+}
+
+/* _002b_preliminary_seurat_raw */
+/* Read mkfile module files */
+Channel
+	.fromPath("${workflow.projectDir}/mkmodules/03b-preliminary-seurat-rawcounts/*")
+	.toList()
+	.set{ mkfiles_002b }
+
+process _002b_preliminary_seurat_raw {
+
+	publishDir "${results_dir}/_002b_preliminary_seurat_raw/", mode:"copy"
+
+	input:
+  file countsdir from results_001_count_again
+  file mk_files from mkfiles_002b
+
+	output:
+  file "*.pdf"
 
 	"""
 	export NFEATURES="${params.nfeatures}"

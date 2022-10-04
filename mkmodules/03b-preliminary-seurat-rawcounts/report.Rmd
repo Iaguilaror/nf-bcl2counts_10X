@@ -1,5 +1,5 @@
 ---
-title: "Preliminary Seurat Analysis\n sample: `r input_counts`"
+title: "Preliminary Seurat Analysis\n RAW DATA\n sample: `r input_counts`"
 author: iaguilaror@gmail.com
 date: "`r Sys.time()`"
 output: pdf_document
@@ -46,9 +46,9 @@ seuobject[[ "percent.mt" ]] <- PercentageFeatureSet( object = seuobject,
 
 # Visualizamos algunas metricas de control de calidad
 # Visualize QC metrics as a violin plot
-VlnPlot( object = seuobject,
-         features = c("nFeature_RNA", "nCount_RNA", "percent.mt"),
-         ncol = 3, pt.size = 0.01 )
+# VlnPlot( object = seuobject,
+#          features = c("nFeature_RNA", "nCount_RNA", "percent.mt"),
+#          ncol = 3, pt.size = 0.01 )
 
 # # Vamos a comparar pares de features
 # # Por ejemplo, para cada celula, comparamos el numero de reads mapeadas, con el porcentaje de mapeos mitocondriales
@@ -84,7 +84,7 @@ qcploter <- function( the_data ) {
                                                     "nCount_RNA" ),
                             percent.mt = FetchData( the_data,
                                                     "percent.mt" ) )
-  
+
   # creamos un panel para comparar metricas por celula
   mitohexbin <- ggplot( data = scatter.df,
                         mapping = aes( x = nFeature_RNA,
@@ -108,10 +108,10 @@ qcploter <- function( the_data ) {
       # strip.text = element_blank( ),
       # legend.position = "top"
     )
-  
+
   # vis
   # mitohexbin
-  
+
   # creamos un panel para comparar metricas por celula
   mitoscatter <- ggplot( data = scatter.df,
                          mapping = aes( x = nFeature_RNA,
@@ -136,7 +136,7 @@ qcploter <- function( the_data ) {
     stat_cor( method = "pearson",
               label.y.npc = "top",
               label.x.npc = "center" )
-  
+
   # graficamos correlacion
   featurecountscatter <- ggplot( data = scatter.df,
                                  mapping = aes( x = nFeature_RNA,
@@ -154,7 +154,7 @@ qcploter <- function( the_data ) {
     stat_cor( method = "pearson",
               label.y.npc = "top",
               label.x.npc = "center" )
-  
+
   # Mostramos ambos graficos en un panel
   plot_grid( mitohexbin,
              mitoscatter,
@@ -302,8 +302,8 @@ DimPlot( object = seuobject,
 # Se calcula el numero de celulas por cada cluster de umap
 
 ```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 10, 10 )  }
-labeled_summary1 <- data.frame( cell_type = Idents( object = seuobject ) ) %>% 
-  group_by( cell_type ) %>% 
+labeled_summary1 <- data.frame( cell_type = Idents( object = seuobject ) ) %>%
+  group_by( cell_type ) %>%
   summarise( n_cells = n( ) )
 
 # how many cells per label
@@ -349,13 +349,13 @@ if ( nrow( seuobject.markers ) > 0 ) {
 ```{r, echo = FALSE, message = FALSE, warning = FALSE }
 # revisa si hay genes marcadores, si no hay, se salta esta parte
 if ( nrow( seuobject.markers ) > 0 ) {
-  
+
   # Primero saca los diez genes mas sobreexpresados de cada cluter de celulas
   top10 <- seuobject.markers %>%
     group_by(cluster) %>%
     top_n( n = 5,
            wt = avg_log2FC )
-  
+
   # Aqui ya hace el heatmap
   DoHeatmap( object = seuobject,
              features = top10$gene )
@@ -438,8 +438,8 @@ seuobject_labeled <- seuobject
 # Re-identify
 Idents( object = seuobject_labeled ) <- seuobject$singler_labels
 
-labeled_summary <- data.frame( cell_type = Idents( object = seuobject_labeled ) ) %>% 
-  group_by( cell_type ) %>% 
+labeled_summary <- data.frame( cell_type = Idents( object = seuobject_labeled ) ) %>%
+  group_by( cell_type ) %>%
   summarise( n_cells = n( ) )
 
 # how many cells per label
@@ -469,16 +469,16 @@ cell_bars <- ggplot( data = labeled_summary,
 cluster_compare_data <- data.frame( seuobject$seurat_clusters,
                                     seuobject.singler_labels = factor( seuobject$singler_labels,
                                                                        levels = labeled_summary$cell_type ),
-                                    seuobject$singler_labels_fine  ) %>% 
+                                    seuobject$singler_labels_fine  ) %>%
   mutate( cell_tag = row.names( . ) )
 
 # summarise the combinations
-cluster_compare_summarised <- cluster_compare_data %>% 
+cluster_compare_summarised <- cluster_compare_data %>%
   group_by( seuobject.singler_labels,
-            seuobject.seurat_clusters ) %>% 
-  summarise( n_cells = n( ) ) %>% 
-  ungroup( ) %>% 
-  group_by( seuobject.singler_labels ) %>% 
+            seuobject.seurat_clusters ) %>%
+  summarise( n_cells = n( ) ) %>%
+  ungroup( ) %>%
+  group_by( seuobject.singler_labels ) %>%
   mutate( singleR_label_total = sum( n_cells ),
           singleR_label_percentage = n_cells / singleR_label_total )
 
@@ -506,7 +506,7 @@ clustering_panel <- plot_grid( cell_bars +
                                         axis.title.x = element_blank( ),
                                         plot.title = element_blank( ) ),
                                clustering_heatmap +
-                                 theme( 
+                                 theme(
                                    # axis.title.x = element_blank( ),
                                    axis.text.x = element_blank( ),
                                    axis.ticks.x = element_blank( ),
@@ -534,7 +534,7 @@ clustering_panel2 <- plot_grid( legend,
                                   ) ,
                                 ncol = 1,
                                 align = "h",
-                                rel_heights = c( 0.4, 0.6 )  ) 
+                                rel_heights = c( 0.4, 0.6 )  )
 
 final_panel_heatmap <- plot_grid( clustering_panel,
                                   clustering_panel2,
@@ -572,13 +572,13 @@ if ( nrow( seuobject_labeled.markers ) > 0 ) {
 ```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c(10, 10) }
 # revisa si hay genes marcadores, si no hay, se salta esta parte
 if ( nrow( seuobject_labeled.markers ) > 0 ) {
-  
+
   # Primero saca los diez genes mas sobreexpresados de cada cluter de celulas
   top10 <- seuobject_labeled.markers %>%
     group_by(cluster) %>%
     top_n( n = 10,
            wt = avg_log2FC )
-  
+
   # Aqui ya hace el heatmap
   DoHeatmap( object = seuobject_labeled,
              features = top10$gene,
@@ -598,7 +598,7 @@ if ( nrow( seuobject_labeled.markers ) > 0 ) {
 counts.df <- as.data.frame( seuobject@assays$RNA@counts )
 
 # calcular Total reads per sample
-total_per_sample <- data.frame( total_counts = colSums( counts.df ) ) %>% 
+total_per_sample <- data.frame( total_counts = colSums( counts.df ) ) %>%
   mutate( cell_tag = row.names( . ) )
 
 # calcular el vector logico de las filas de interes
@@ -608,18 +608,18 @@ rows_of_interest <- rownames( counts.df ) %in% genes_of_interest
 counts_of_interest <- counts.df[ rows_of_interest, ]
 
 # pasamos a formato long
-counts_of_interest_long <- counts_of_interest %>% 
-  mutate( feature = rownames( . ) ) %>% 
+counts_of_interest_long <- counts_of_interest %>%
+  mutate( feature = rownames( . ) ) %>%
   pivot_longer( data = .,
                 cols = -feature,
                 names_to = "cell_tag",
-                values_to = "counts" ) %>% 
+                values_to = "counts" ) %>%
   left_join( x = .,
              y = cluster_compare_data,
-             by = "cell_tag" ) %>% 
+             by = "cell_tag" ) %>%
   left_join( x = .,
              y = total_per_sample,
-             by = "cell_tag" ) %>% 
+             by = "cell_tag" ) %>%
   mutate( counts_un_total=  counts / total_counts,
           TPM = counts_un_total * 1e6 )
 
@@ -627,31 +627,31 @@ counts_of_interest_long <- counts_of_interest %>%
 mytheme1 <- theme( axis.text.x = element_text( angle = 90, hjust = 0.5, vjust = 0.5 ) )
 
 # Total counts by tag
-ggplot( data = counts_of_interest_long %>% 
-          select( -feature ) %>% 
+ggplot( data = counts_of_interest_long %>%
+          select( -feature ) %>%
           unique( ),
         mapping = aes( x = seuobject.seurat_clusters,
-                       y = total_counts ) ) + 
+                       y = total_counts ) ) +
   geom_violin( fill = "skyblue" ) +
   theme_classic( ) +
   mytheme1
 
 # Total counts by tag
-ggplot( data = counts_of_interest_long %>% 
-          select( -feature ) %>% 
+ggplot( data = counts_of_interest_long %>%
+          select( -feature ) %>%
           unique( ),
         mapping = aes( x = seuobject.singler_labels,
-                       y = total_counts ) ) + 
+                       y = total_counts ) ) +
   geom_violin( fill = "skyblue" ) +
   theme_classic( ) +
   mytheme1
 
 # Total counts by tag
-ggplot( data = counts_of_interest_long %>% 
-          select( -feature ) %>% 
+ggplot( data = counts_of_interest_long %>%
+          select( -feature ) %>%
           unique( ),
         mapping = aes( x = seuobject.singler_labels_fine,
-                       y = total_counts ) ) + 
+                       y = total_counts ) ) +
   geom_violin( fill = "skyblue" ) +
   theme_classic( ) +
   mytheme1
@@ -696,4 +696,3 @@ ggplot( data = counts_of_interest_long,
   mytheme1
 
 ```
-

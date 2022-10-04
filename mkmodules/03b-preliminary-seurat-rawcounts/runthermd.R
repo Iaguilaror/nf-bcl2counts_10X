@@ -5,7 +5,7 @@ args = commandArgs( trailingOnly = TRUE )
 
 ## Uncomment For debugging only
 ## Comment for production mode only
-# args[1] <- "test/HIVpos_ARTpos_pbmcs_SP_cellrangercounts/" ## "test/data/test_sample_cellrangercounts/"
+# args[1] <- "test/data/HIVpos_ARTpos_pbmcs_SP_cellrangercounts/" ## "test/data/test_sample_cellrangercounts/"
 # args[2] <- 0                                         ## 0 for testing pipeline; nFeature_RNA filter
 # args[3] <- 25                                        ## 25 for testing the pipeline; This determines the number of neighboring points used in local approximations
 # args[4] <- "output.pdf"                              ## output.pdf files
@@ -18,7 +18,7 @@ pdf_file <- args[4]
 rmd_file <- "report.Rmd" # maybe add manually always?
 
 # name of the dir to process
-dir_to_process <- "/outs/filtered_feature_bc_matrix"
+dir_to_process <- "/outs/raw_feature_bc_matrix"
 
 # call the renderizer
 rmarkdown::render( input = rmd_file,
