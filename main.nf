@@ -58,7 +58,7 @@ params.pipeline_name = "bcl2fastq_10X"
   Define the Nextflow version under which this pipeline was developed or successfuly tested
   Updated by iaguilar at JAN 2023
 */
-params.nextflow_required_version = '23.10.4'
+params.nextflow_required_version = '22.10.4'
 
 /*
   Initiate default values for parameters
@@ -70,6 +70,7 @@ params.version  =	false   //default is false to not trigger version message auto
 params.input_dir  =	false	//if no inputh path is provided, value is false to provoke the error during the parameter validation block
 params.reference  =	false	//if no inputh path is provided, value is false to provoke the error during the parameter validation block
 params.samplecsv  =	false	//default is false to not trigger version message automatically at every run
+params.ref_url    = false //default is false to not trigger version message automatically at every run
 
 params.nfeatures  =	200 //default is 200 as recommended by seurat tutorial on 2022
 params.nneighbors =	30  //default is 30 as described in http://127.0.0.1:29453/library/Seurat/html/RunUMAP.html for parameter n.neighbors
@@ -77,7 +78,13 @@ params.threads    =	1		//default is 1 thread per process
 params.maxmem     =	1	  //default is 1 GB per process
 
 /* read the module with the param init and check */
-include { } from './nfmodules/doc_and_param_check.nf'
+include { } from './modules/doc_and_param_check.nf'
+
+/* load functions for testing env */
+include { get_fullParent }  from './modules/useful_functions.nf'
+
+/* define the fullpath for the final location of the reference */
+params.ref_parentdir = get_fullParent( params.reference )
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,7 +97,7 @@ include { } from './nfmodules/doc_and_param_check.nf'
 Output directory definition
 Default value to create directory is the parent dir of --input_dir
 */
-params.output_dir = file(params.input_dir).getParent()
+params.output_dir = get_fullParent( params.input_dir )
 
 /*
   Results and Intermediate directory definition
@@ -98,8 +105,9 @@ params.output_dir = file(params.input_dir).getParent()
   and they always include the pipeline name in the variable (pipeline_name) defined by this Script
   This directories will be automatically created by the pipeline to store files during the run
 */
-results_dir = "${params.output_dir}/${params.pipeline_name}-results/"
-intermediates_dir = "${params.output_dir}/${params.pipeline_name}-intermediate/"
+
+params.results_dir =        "${params.output_dir}/${params.pipeline_name}-results/"
+params.intermediates_dir =  "${params.output_dir}/${params.pipeline_name}-intermediate/"
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -107,31 +115,43 @@ intermediates_dir = "${params.output_dir}/${params.pipeline_name}-intermediate/"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-params.str = 'Hello world!'
-
-process splitLetters {
-  output:
-    path 'chunk_*'
-
-  """
-  printf '${params.str}' | split -b 6 - chunk_
-  """
-}
-
-process convertToUpper {
-  input:
-    path x
-  output:
-    stdout
-
-  """
-  cat $x | tr '[a-z]' '[A-Z]'
-  """
-}
+/* load workflows for testing env */
+include { DOWNLOAD_REF }  from  './modules/pre01-downloadreference'
 
 workflow {
-  splitLetters | flatten | convertToUpper | view { it.trim() }
+
+  if ( ! file( params.reference ).exists( ) ){
+    println " [>..] Reference directory not found. It will be downloaded and created"
+    DOWNLOAD_REF ( )
+  }
+
 }
+
+// params.str = 'Hello world!'
+
+// process splitLetters {
+//   output:
+//     path 'chunk_*'
+
+//   """
+//   printf '${params.str}' | split -b 6 - chunk_
+//   """
+// }
+
+// process convertToUpper {
+//   input:
+//     path x
+//   output:
+//     stdout
+
+//   """
+//   cat $x | tr '[a-z]' '[A-Z]'
+//   """
+// }
+
+// workflow {
+//   splitLetters | flatten | convertToUpper | view { it.trim() }
+// }
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
