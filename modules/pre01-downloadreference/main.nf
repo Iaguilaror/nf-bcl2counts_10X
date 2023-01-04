@@ -1,3 +1,6 @@
+/* Inititate DSL2 */
+nextflow.enable.dsl=2
+
 process download_reference {
 
 	publishDir "${params.ref_parentdir}", mode:"copy"
