@@ -19,7 +19,7 @@ Authors:
 Pipeline Processes In Brief:
 .
 Pre-processing:
-  _pre01_mkfastq
+_pre01_mkfastq
 
 Core-processing:
 _001_count
@@ -34,114 +34,57 @@ ENDING
  _register_configs
 ================================================================*/
 
-/* Define the help message as a function to call when needed *//////////////////////////////
-def helpMessage() {
-	log.info"""
-  ==========================================
-  The 10X bcl2fastq pipeline
-  - A pre-processing tool for single cell RNAseq
-  v${version}
-  ==========================================
-	Usage:
-  nextflow run main.nf --input_dir <path to inputs> [--output_dir path to results ]
-	  --input_dir    <- To-do;
-				To-do;
-				To-do;
-	  --output_dir     <- directory where results, intermediate and log files will bestored;
-				default: same dir where --query_fasta resides
-	  -resume	   <- Use cached results if the executed project has been run before;
-				default: not activated
-				This native NF option checks if anything has changed from a previous pipeline execution.
-				Then, it resumes the run from the last successful stage.
-				i.e. If for some reason your previous run got interrupted,
-				running the -resume option will take it from the last successful pipeline stage
-				instead of starting over
-				Read more here: https://www.nextflow.io/docs/latest/getstarted.html#getstart-resume
-	  --help           <- Shows Pipeline Information
-	  --version        <- Show Pipeline version
-	""".stripIndent()
-}
+nextflow.enable.dsl = 2
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    PREPARE PARAMS DOCUMENTATION AND FUNCTIONS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
 /*//////////////////////////////
   Define pipeline version
   If you bump the number, remember to bump it in the header description at the begining of this script too
 */
-version = "0.0.1"
+params.ver = "0.0.2"
 
 /*//////////////////////////////
   Define pipeline Name
   This will be used as a name to include in the results and intermediates directory names
 */
-pipeline_name = "bcl2fastq_10X"
+params.pipeline_name = "bcl2fastq_10X"
+
+/*//////////////////////////////
+  Define the Nextflow version under which this pipeline was developed or successfuly tested
+  Updated by iaguilar at JAN 2023
+*/
+params.nextflow_required_version = '23.10.4'
 
 /*
   Initiate default values for parameters
   to avoid "WARN: Access to undefined parameter" messages
 */
-params.input_dir = false  //if no inputh path is provided, value is false to provoke the error during the parameter validation block
-params.help = false       //default is false to not trigger help message automatically at every run
-params.version = false    //default is false to not trigger version message automatically at every run
-params.simplecsv = false  //default is false to not trigger version message automatically at every run
-params.nfeatures = 200    //default is 200 as recommended by seurat tutorial on 2022
-params.nneighbors = 30    //default is 30 as described in http://127.0.0.1:29453/library/Seurat/html/RunUMAP.html for parameter n.neighbors
-params.threads = 1        //default is 1 thread per process
-params.maxmem = 1         //default is 1 GB per process
+params.help     = false   //default is false to not trigger help message automatically at every run
+params.version  =	false   //default is false to not trigger version message automatically at every run
 
-/*//////////////////////////////
-  If the user inputs the --help flag
-  print the help message and exit pipeline
-*/
-if (params.help){
-	helpMessage()
-	exit 0
-}
+params.input_dir  =	false	//if no inputh path is provided, value is false to provoke the error during the parameter validation block
+params.reference  =	false	//if no inputh path is provided, value is false to provoke the error during the parameter validation block
+params.samplecsv  =	false	//default is false to not trigger version message automatically at every run
 
-/*//////////////////////////////
-  If the user inputs the --version flag
-  print the pipeline version
-*/
-if (params.version){
-	println "Pipeline v${version}"
-	exit 0
-}
+params.nfeatures  =	200 //default is 200 as recommended by seurat tutorial on 2022
+params.nneighbors =	30  //default is 30 as described in http://127.0.0.1:29453/library/Seurat/html/RunUMAP.html for parameter n.neighbors
+params.threads    =	1		//default is 1 thread per process
+params.maxmem     =	1	  //default is 1 GB per process
 
-/*//////////////////////////////
-  Define the Nextflow version under which this pipeline was developed or successfuly tested
-  Updated by iaguilar at MAY 2021
-*/
-nextflow_required_version = '20.10.0'
+/* read the module with the param init and check */
+include { } from './nfmodules/doc_and_param_check.nf'
+
 /*
-  Try Catch to verify compatible Nextflow version
-  If user Nextflow version is lower than the required version pipeline will continue
-  but a message is printed to tell the user maybe it's a good idea to update her/his Nextflow
-*/
-try {
-	if( ! nextflow.version.matches(">= $nextflow_required_version") ){
-		throw GroovyException('Your Nextflow version is older than Pipeline required version')
-	}
-} catch (all) {
-	log.error "-----\n" +
-			"  This pipeline requires Nextflow version: $nextflow_required_version \n" +
-      "  But you are running version: $workflow.nextflow.version \n" +
-			"  The pipeline will continue but some things may not work as intended\n" +
-			"  You may want to run `nextflow self-update` to update Nextflow\n" +
-			"============================================================"
-}
-
-/*//////////////////////////////
-  INPUT PARAMETER VALIDATION BLOCK
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     INPUT PARAMETER VALIDATION BLOCK
   TODO (iaguilar) check the extension of input queries; see getExtension() at https://www.nextflow.io/docs/latest/script.html#check-file-attributes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
-/* Check if inputs provided
-    if they were not provided, they keep the 'false' value assigned in the parameter initiation block above
-    and this test fails
-*/
-if ( !params.input_dir ) {
-  log.error " Please provide the following params: --input_dir \n\n" +
-  " For more information, execute: nextflow run align_and_compare --help"
-  exit 1
-}
 
 /*
 Output directory definition
@@ -155,201 +98,57 @@ params.output_dir = file(params.input_dir).getParent()
   and they always include the pipeline name in the variable (pipeline_name) defined by this Script
   This directories will be automatically created by the pipeline to store files during the run
 */
-results_dir = "${params.output_dir}/${pipeline_name}-results/"
-intermediates_dir = "${params.output_dir}/${pipeline_name}-intermediate/"
+results_dir = "${params.output_dir}/${params.pipeline_name}-results/"
+intermediates_dir = "${params.output_dir}/${params.pipeline_name}-intermediate/"
 
 /*
-Useful functions definition
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    NAMED WORKFLOW FOR PIPELINE
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-/*//////////////////////////////
-  LOG RUN INFORMATION
-*/
-log.info"""
-==========================================
-The 10X bcl2fastq pipeline
-- A pre-processing tool for single cell RNAseq
-v${version}
-==========================================
-"""
-log.info "--Nextflow metadata--"
-/* define function to store nextflow metadata summary info */
-def nfsummary = [:]
-/* log parameter values beign used into summary */
-/* For the following runtime metadata origins, see https://www.nextflow.io/docs/latest/metadata.html */
-nfsummary['Resumed run?'] = workflow.resume
-nfsummary['Run Name']			= workflow.runName
-nfsummary['Current user']		= workflow.userName
-/* string transform the time and date of run start; remove : chars and replace spaces by underscores */
-nfsummary['Start time']			= workflow.start.toString().replace(":", "").replace(" ", "_")
-nfsummary['Script dir']		 = workflow.projectDir
-nfsummary['Working dir']		 = workflow.workDir
-nfsummary['Current dir']		= workflow.launchDir
-nfsummary['Launch command'] = workflow.commandLine
-log.info nfsummary.collect { k,v -> "${k.padRight(15)}: $v" }.join("\n")
-log.info "\n\n--Pipeline Parameters--"
-/* define function to store nextflow metadata summary info */
-def pipelinesummary = [:]
-/* log parameter values beign used into summary */
-pipelinesummary['input directory']			= params.input_dir
-pipelinesummary['Results Dir']		= results_dir
-pipelinesummary['Intermediate Dir']		= intermediates_dir
-pipelinesummary['SimpleCSV samplesheet']			= params.simplecsv
-pipelinesummary['nfeatures for seurat']			= params.nfeatures
-pipelinesummary['nneighbors for seurat']			= params.nneighbors
-pipelinesummary['threads mkfastq']			= params.threads
-pipelinesummary['max memory mkfastq']			= params.maxmem
-/* print stored summary info */
-log.info pipelinesummary.collect { k,v -> "${k.padRight(15)}: $v" }.join("\n")
-log.info "==========================================\nPipeline Start"
+params.str = 'Hello world!'
+
+process splitLetters {
+  output:
+    path 'chunk_*'
+
+  """
+  printf '${params.str}' | split -b 6 - chunk_
+  """
+}
+
+process convertToUpper {
+  input:
+    path x
+  output:
+    stdout
+
+  """
+  cat $x | tr '[a-z]' '[A-Z]'
+  """
+}
+
+workflow {
+  splitLetters | flatten | convertToUpper | view { it.trim() }
+}
 
 /*
-Useful functions definition
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    RUN ALL WORKFLOWS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-/* define a function for extracting the file name from a full path */
-/* The full path will be the one defined by the user to indicate where the reference file is located */
-def get_baseName(f) {
-	/* find where is the last appearance of "/", then extract the string +1 after this last appearance */
-  	f.substring(f.lastIndexOf('/') + 1);
-}
 
-/*//////////////////////////////
-  PIPELINE START
-*/
+//
+// WORKFLOW: Execute a single named workflow for the pipeline
+// See: https://github.com/nf-core/rnaseq/issues/619
+//
+// workflow {
+//     NFCORE_RNASEQ ()
+// }
 
 /*
-	READ INPUTS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    THE END
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
-/* Load fastq files into channel */
-Channel
-  .fromPath( "${params.input_dir}" )
-  .set{ bcl_inputs }
-
-/* Load samplesheet into channel */
-Channel
-  .fromPath( "${params.simplecsv}" )
-  .set{ simplecsv_sheet }
-
-/* _pre01_mkfastq */
-/* Read mkfile module files */
-Channel
-	.fromPath("${workflow.projectDir}/mkmodules/01-mkfastq/*")
-	.toList()
-	.set{ mkfiles_pre01 }
-
-process _pre01_mkfastq {
-//	label 'standard'
-
-	publishDir "${results_dir}/_pre01_mkfastq/",mode:"copy"
-
-	input:
-  file bcl from bcl_inputs
-  file csv from simplecsv_sheet
-  file mk_files from mkfiles_pre01
-
-	output:
-  file "*" into results_pre01_mkfastq
-
-	"""
-  export OUTDIR="results_mkfastq"
-  export INPUTDIR="${bcl}"
-  export CSV="${csv}"
-  export THREADS="${params.threads}"
-  export MAXMEM="${params.maxmem}"
-	bash runmk.sh
-	"""
-
-}
-
-/* _001_count */
-/* Read mkfile module files */
-Channel
-	.fromPath("${workflow.projectDir}/mkmodules/02-count/*")
-	.toList()
-	.set{ mkfiles_001 }
-
-/* Load transcriptome into channel */
-Channel
-  .fromPath( "${params.transcriptome}" )
-  .set{ transcriptome_dir }
-
-/* Load chemistry into channel */
-Channel
-	.fromPath( "${params.chemistry}" )
-	.set{ chemistry_type }
-
-process _001_count {
-
-	publishDir "${results_dir}/_001_count/",mode:"copy"
-
-	input:
-  file fastq from results_pre01_mkfastq
-  file transcriptome from transcriptome_dir
-	file chemistry from chemistry_type
-  file mk_files from mkfiles_001
-
-	output:
-  file "*" into results_001_count, results_001_count_again  mode flatten
-
-	"""
-	export TRANSCRIPTOME="${transcriptome}"
-	export CHEMISTRY="${chemistry}"
-  export THREADS="${params.threads}"
-  export MAXMEM="${params.maxmem}"
-	bash runmk.sh
-	"""
-
-}
-
-/* _002_preliminary_seurat */
-/* Read mkfile module files */
-Channel
-	.fromPath("${workflow.projectDir}/mkmodules/03-preliminary-seurat/*")
-	.toList()
-	.set{ mkfiles_002 }
-
-process _002_preliminary_seurat {
-
-	publishDir "${results_dir}/_002_preliminary-seurat/",mode:"copy"
-
-	input:
-  file countsdir from results_001_count
-  file mk_files from mkfiles_002
-
-	output:
-  file "*.pdf"
-
-	"""
-	export NFEATURES="${params.nfeatures}"
-	export NNEIGHBORS="${params.nneighbors}"
-	bash runmk.sh
-	"""
-
-}
-
-/* _002b_preliminary_seurat_raw */
-/* Read mkfile module files */
-Channel
-	.fromPath("${workflow.projectDir}/mkmodules/03b-preliminary-seurat-rawcounts/*")
-	.toList()
-	.set{ mkfiles_002b }
-
-process _002b_preliminary_seurat_raw {
-
-	publishDir "${results_dir}/_002b_preliminary_seurat_raw/", mode:"copy"
-
-	input:
-  file countsdir from results_001_count_again
-  file mk_files from mkfiles_002b
-
-	output:
-  file "*.pdf"
-
-	"""
-	export NFEATURES="${params.nfeatures}"
-	export NNEIGHBORS="${params.nneighbors}"
-	bash runmk.sh
-	"""
-
-}
