@@ -16,8 +16,8 @@ mkmodules/*/test/results/*
 mkmodules/*/test/results_count/*
 
 # Ignore test subdirectories from nfmodules
-nfmodules/*/test/results/*
-nfmodules/*/test/results_count/*
+modules/*/test/results/*
+modules/*/test/results_count/*
 
 
 ## ignore intermediate and logs from tests
