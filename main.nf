@@ -115,8 +115,9 @@ params.intermediates_dir =  "${params.output_dir}/${params.pipeline_name}-interm
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-/* load workflows for testing env */
+/* load workflows */
 include { DOWNLOAD_REF }  from  './modules/pre01-downloadreference'
+include { MKFASTQ }  from  './modules/01-mkfastq'
 
 workflow {
 
@@ -124,6 +125,8 @@ workflow {
     println " [>..] Reference directory not found. It will be downloaded and created"
     DOWNLOAD_REF ( )
   }
+
+  MKFASTQ ()
 
 }
 

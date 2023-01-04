@@ -8,7 +8,7 @@
 .nextflow.log*
 .nextflow/
 
-## ignore workdirw
+## ignore workdir
 work*
 
 ## Ignore test subdirectories from mkmodules
@@ -19,11 +19,13 @@ mkmodules/*/test/results_count/*
 modules/*/test/results/*
 modules/*/test/results_count/*
 
-
 ## ignore intermediate and logs from tests
 test/data/*/intermediate/
 test/data/*/logs/
 test/results*
+
+## ignore minireference
+test/reference/*_miniref
 
 ## ignore local R datas
 *.Rdata
