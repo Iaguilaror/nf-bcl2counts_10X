@@ -6,8 +6,8 @@
 export OUTDIR="fastq_outs_tinybcl"
 export INPUTDIR="test/tinytest/cellranger-tiny-bcl-1.2.0"
 export CSV="test/tinytest/cellranger-tiny-bcl-simple-1.2.0.csv"
-export THREADS="12"
-export MAXMEM="20"
+export THREADS="4"
+export MAXMEM="1"
 ###
 
 echo "[>..] test running this module with data in test/data"

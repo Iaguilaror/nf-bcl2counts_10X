@@ -1,37 +1,37 @@
-/* Load samplesheet directory */
-input_samplesheet = Channel.fromPath("${params.samplesheet}")
+/* Inititate DSL2 */
+nextflow.enable.dsl=2
 
-/* Load BCL directory */
-Channel
-  .fromPath("${params.bcl_inputdir}")
-  .combine( input_samplesheet )
-  .set{ module_input_bcls }
-
+/* Define the main processes */
 process mkfastq {
-  
-debug true
 
   input:
-  file BCL_DIR
+    path BCLDIR
+    path SAMPLESHEET
 
-  // output:
-  //   file "*"
+  output:
+    path "multiqc*", emit: multiqc_results
+    path "results_mkfastq", emit: mkfastq_results
 
   """
-  # get BCL dirname
-  bclname=\$(basename '${params.bcl_inputdir}') #
-  sheetname=\$(basename '${params.samplesheet}') #
   cellranger mkfastq \
-    --id='${params.fastq_outdir}' \
-		--run=\$bclname \
-    --csv=\$sheetname \
+    --id=results_mkfastq \
+		--run=$BCLDIR \
+    --csv=$SAMPLESHEET \
     --jobmode=local \
     --localcores='${params.mkfastq_nproc}' \
     --localmem='${params.mkfastq_maxmem}' \
-	&& multiqc '${params.fastq_outdir}'
+	&& multiqc results_mkfastq
   """
 }
 
+/* name a flow for easy import */
+workflow mkfastq_flow {
+  def bcl_ch = Channel.fromPath(params.bcl_inputdir)
+  def samplesheet_ch = Channel.fromPath(params.samplesheet)
+  mkfastq( bcl_ch, samplesheet_ch )
+}
+
+/* invoke nameles workflow for local module testing inside repo/nfmodules/thismodule/ */
 workflow {
-  module_input_bcls | mkfastq 
+  mkfastq_flow( )
 }
