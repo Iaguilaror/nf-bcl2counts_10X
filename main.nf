@@ -136,12 +136,19 @@ workflow prepare_references {
   emit:
     transcriptome_ch
 
-  // def fastqdir_ch = MKFASTQ ()
-
-  // CELRANGER_COUNTS ( fastqdir_ch, transcriptome_ch )
-
 }
 
+workflow mainflow {
+
+  take:
+    transcriptome
+
+  main:
+  fastqdir_ch = MKFASTQ ()
+
+  CELRANGER_COUNTS ( fastqdir_ch, transcriptome )
+
+}
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN ALL WORKFLOWS
@@ -155,8 +162,8 @@ workflow prepare_references {
 workflow {
     prepare_references ()
 
-    prepare_references.out[0]
-    .view()
+    mainflow( prepare_references.out[0] )
+
 }
 
 /*

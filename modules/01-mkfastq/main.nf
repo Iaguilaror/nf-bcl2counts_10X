@@ -32,8 +32,8 @@ workflow MKFASTQ {
 
   main:
 
-  def bcl_ch = Channel.fromPath(params.bcl_inputdir)
-  def samplesheet_ch = Channel.fromPath(params.samplesheet)
+  def bcl_ch = Channel.fromPath (params.bcl_inputdir )
+  def samplesheet_ch = Channel.fromPath( params.samplesheet )
   mkfastq( bcl_ch, samplesheet_ch )
   
   emit:
