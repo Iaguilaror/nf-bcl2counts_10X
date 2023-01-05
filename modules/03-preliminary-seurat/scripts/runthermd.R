@@ -5,7 +5,7 @@ args = commandArgs( trailingOnly = TRUE )
 
 ## Uncomment For debugging only
 ## Comment for production mode only
-# args[1] <- "../test/test_sample_cellrangercounts/"    ## "../test/test_sample_cellrangercounts/"
+# args[1] <- "../test/test_sample_cellrangercounts//"    ## "../test/test_sample_cellrangercounts/"
 # args[2] <- 0                                          ## 0 for testing pipeline; nFeature_RNA filter
 # args[3] <- 25                                         ## 25 for testing the pipeline; This determines the number of neighboring points used in local approximations
 # args[4] <- "output.pdf"                               ## output.pdf files

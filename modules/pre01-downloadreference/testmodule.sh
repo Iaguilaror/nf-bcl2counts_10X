@@ -13,6 +13,6 @@ mkdir -p test/results
 # run nf script
 nextflow run testmodule.nf \
   --debug true \
-  --ref_url   "https://e9d67fad-ce03-438e-887e-5ca1edd500ec.filesusr.com/archives/e744b8_55b6659e40ec4f8a8953e3518e27b801.gz?dn=GRCh38_miniref.tar.gz" \
-  --reference "test/results/GRCh38_miniref/" \
+  --ref_url   "https://cf.10xgenomics.com/supp/cell-exp/refdata-gex-GRCh38-2020-A.tar.gz" \
+  --reference "test/results/refdata-gex-GRCh38-2020-A/" \
 && rm -rf work                # delete workdir only if final results were found

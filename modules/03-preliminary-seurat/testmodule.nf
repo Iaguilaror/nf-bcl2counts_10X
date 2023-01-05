@@ -11,10 +11,10 @@ params.results_dir = "test/results"
 include { SEURAT_PRELIM }    from './main.nf'
 
 /* declare input channel for testing */
-countsdir = Channel.fromPath( "scripts/*" ).toList()
+countsdir = Channel.fromPath( "test/test_sample_cellrangercounts" )
 
 /* declare scripts channel for testing */
-scripts = Channel.fromPath( "test/data" )
+scripts = Channel.fromPath( "scripts/*" ).toList()
 
 workflow {
   SEURAT_PRELIM ( countsdir, scripts )

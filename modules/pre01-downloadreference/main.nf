@@ -3,7 +3,7 @@ nextflow.enable.dsl=2
 
 process download_reference {
 
-	publishDir "${params.ref_parentdir}", mode:"copy"
+	publishDir "${params.ref_parentdir}", mode:"copyNoFollow"
 
   output:
     path "*", emit: download_reference_results
