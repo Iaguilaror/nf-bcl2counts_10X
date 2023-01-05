@@ -8,14 +8,14 @@ nextflow.enable.dsl=2
 params.results_dir = "test/results"
 
 /* load workflows for testing env */
-include { CELLRANGER_COUNTS }    from './main.nf'
+include { SEURAT_PRELIM }    from './main.nf'
 
 /* declare input channel for testing */
-fastqdir = Channel.fromPath( "test/data" )
+countsdir = Channel.fromPath( "scripts/*" ).toList()
 
-/* declare function to load reference into channel */
-def transcriptome_ch = Channel.fromPath( params.reference )
+/* declare scripts channel for testing */
+scripts = Channel.fromPath( "test/data" )
 
 workflow {
-  CELLRANGER_COUNTS ( fastqdir, transcriptome_ch )
+  SEURAT_PRELIM ( countsdir, scripts )
 }

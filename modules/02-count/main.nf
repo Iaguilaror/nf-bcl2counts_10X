@@ -57,7 +57,7 @@ process counts {
 }
 
 /* name a flow for easy import */
-workflow CELRANGER_COUNTS {
+workflow CELLRANGER_COUNTS {
 
     take:
         fastqdir
@@ -68,5 +68,7 @@ workflow CELRANGER_COUNTS {
         samplenames_ch = separate_samples( samplesheet_ch ) | flatten   // saving a channel with the result of the process, flattened
 
         counts( samplenames_ch, fastqdir, transcriptome_ch )
-       
+    
+    emit:
+        counts.out[0]
 }

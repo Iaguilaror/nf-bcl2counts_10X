@@ -1,0 +1,699 @@
+---
+title: "Preliminary Seurat Analysis\n sample: `r input_counts`"
+author: iaguilaror@gmail.com
+date: "`r Sys.time()`"
+output: pdf_document
+---
+
+# Start Seurat report
+
+Number of cells:
+```{r, echo = FALSE, message = FALSE}
+library( "Seurat" )
+library( "dplyr" )
+library( "ggpubr" )
+library( "ggplot2" )
+library( "hexbin" )
+library( "ggsci" )
+library( "scales" )
+library( "cowplot" )
+library( "pacman" )
+library( "stringr" )
+library( "tidyr" )
+
+#uncomment for debug onlye
+input_dir <- input_counts
+fulldir <- paste0( input_dir, dir_to_process )
+
+# Leemos la data1
+cellranger.data <- Read10X( data.dir = fulldir )
+
+# Creamos objeto seurat
+seuobject <- CreateSeuratObject( counts = cellranger.data,
+                                 project = "this project")
+
+# Vemos numero de celulas
+table( seuobject$orig.ident ) %>% knitr::kable( )
+
+```
+
+# Quality Control Metrics
+```{r, echo = FALSE, message = FALSE, warning=FALSE, fig.align = 'center'}
+
+# Revisamos el porcentaje de conteos que corresponden a genes mitocondriales
+seuobject[[ "percent.mt" ]] <- PercentageFeatureSet( object = seuobject,
+                                                     pattern = "^MT-" )
+
+# Visualizamos algunas metricas de control de calidad
+# Visualize QC metrics as a violin plot
+VlnPlot( object = seuobject,
+         features = c("nFeature_RNA", "nCount_RNA", "percent.mt"),
+         ncol = 3, pt.size = 0.01 )
+
+# # Vamos a comparar pares de features
+# # Por ejemplo, para cada celula, comparamos el numero de reads mapeadas, con el porcentaje de mapeos mitocondriales
+# plot1 <- FeatureScatter( object = seuobject,
+#                          feature1 = "nFeature_RNA",
+#                          feature2 = "percent.mt",
+#                          group.by = "orig.ident", pt.size = 1,
+#                          smooth = FALSE,
+#                          jitter = FALSE )
+#
+# # Visualizamos
+# plot1 +
+#   geom_hline( yintercept = 5,
+#               linetype = "dashed" ) +
+#   geom_vline( xintercept = c(200, 2500),
+#               lty = "dashed" ) +
+#   geom_point( alpha = 0.1 )
+```
+
+# Panel QC
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c(4, 10) }
+
+# get max values for
+
+# creamos una funcion para el panel QC
+qcploter <- function( the_data ) {
+  # extraemos el dataframe a mano
+  scatter.df <- data.frame( identity = Idents( the_data ),
+                            nFeature_RNA = FetchData( the_data,
+                                                      "nFeature_RNA" ),
+                            nCount_RNA = FetchData( the_data,
+                                                    "nCount_RNA" ),
+                            percent.mt = FetchData( the_data,
+                                                    "percent.mt" ) )
+  
+  # creamos un panel para comparar metricas por celula
+  mitohexbin <- ggplot( data = scatter.df,
+                        mapping = aes( x = nFeature_RNA,
+                                       y = percent.mt,
+                                       # color = identity
+                        ) ) +
+    geom_hex( bins = 5e1 ) +
+    geom_hline( yintercept = 5,               # Se recomienda usar celulas con menos del 5% de porcentaje mitocondrial
+                linetype = "dashed" ) +
+    geom_vline( xintercept = c( 200, 2500 ),  # Se recomienda usar celulas entre 200 y 2,500 genes
+                lty = "dashed" ) +
+    scale_color_d3( ) +
+    scale_fill_gradient( low = "gray95", high = "black" ) +
+    labs( color = "Sample" ) +
+    theme_light( ) +
+    theme(
+      strip.background = element_rect( fill = "white" ),
+      strip.text = element_text( colour = "black", size = 15 ),
+      legend.position = "none"
+      # strip.background = element_blank( ),
+      # strip.text = element_blank( ),
+      # legend.position = "top"
+    )
+  
+  # vis
+  # mitohexbin
+  
+  # creamos un panel para comparar metricas por celula
+  mitoscatter <- ggplot( data = scatter.df,
+                         mapping = aes( x = nFeature_RNA,
+                                        y = percent.mt,
+                                        color = identity ) ) +
+    geom_point( alpha = 0.2, size = 0.3 ) +
+    geom_hline( yintercept = 5,               # Se recomienda usar celulas con menos del 5% de porcentaje mitocondrial
+                linetype = "dashed" ) +
+    geom_vline( xintercept = c( 200, 2500 ),  # Se recomienda usar celulas entre 200 y 2,500 genes
+                lty = "dashed" ) +
+    scale_color_d3( ) +
+    labs( color = "Sample" ) +
+    theme_light( ) +
+    theme(
+      # strip.background = element_rect( fill = "white" ),
+      # strip.text = element_text( colour = "black", size = 15 ),
+      legend.position = "none",
+      strip.background = element_blank( ),
+      strip.text = element_blank( ),
+      # legend.position = "top"
+    ) +
+    stat_cor( method = "pearson",
+              label.y.npc = "top",
+              label.x.npc = "center" )
+  
+  # graficamos correlacion
+  featurecountscatter <- ggplot( data = scatter.df,
+                                 mapping = aes( x = nFeature_RNA,
+                                                y = nCount_RNA,
+                                                color = identity ) ) +
+    geom_point( alpha = 0.2, size = 0.3 ) +
+    scale_color_d3( ) +
+    labs( color = "Sample" ) +
+    theme_light( ) +
+    theme(
+      strip.background = element_blank( ),
+      strip.text = element_blank( ),
+      legend.position = "none"
+    ) +
+    stat_cor( method = "pearson",
+              label.y.npc = "top",
+              label.x.npc = "center" )
+  
+  # Mostramos ambos graficos en un panel
+  plot_grid( mitohexbin,
+             mitoscatter,
+             featurecountscatter,
+             ncol = 1, align = "v" )
+}
+
+# viz
+qcploter( the_data = seuobject )
+
+```
+
+# After QC-basedfiltering
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c(4, 10) }
+# Procedemos a filtrar las celulas, de acuerdo a las metricas de control de calidad evaluadas arriba
+seuobject <- subset( x = seuobject,
+                     subset = nFeature_RNA > as.numeric( nfeatures_cutoff ) &
+                       nFeature_RNA < 2500 &
+                       percent.mt < 5 )
+
+qcploter( the_data = seuobject )
+```
+# Ncells after filtering
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+table( seuobject$orig.ident ) %>% knitr::kable( )
+```
+# Normalize
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+
+
+## Normalizamos la data
+seuobject <- NormalizeData( object = seuobject,
+                            normalization.method = "LogNormalize",
+                            scale.factor = 10000 )
+
+
+# Nos quedamos con los 2000 genes mas variables dentro del dataset
+seuobject <- FindVariableFeatures( object = seuobject,
+                                   selection.method = "vst",
+                                   nfeatures = 2000 )
+
+# veamos los top10 genes mas variables
+top10 <- head( x = VariableFeatures( seuobject ),
+               n = 10, )
+
+# lo vemos en tabla
+knitr::kable( top10, col.names = "Top variable genes" )
+
+# Graficamos los genes de acuerdo a su nivel de expresion
+# plot variable features with and without labels
+scater1 <- VariableFeaturePlot( seuobject )
+
+# Destacamos los genes top10 (los mas variables dentro de los variables )
+scater2 <- LabelPoints( plot = scater1,
+                        points = top10,
+                        repel = TRUE )
+
+# Visualizamos
+scater2
+
+```
+
+# Run PCA
+
+Shown: First 5PC and the most important genes in each PC
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# Sacamos los nombres de los genes
+all.genes <- rownames( seuobject )
+
+# Escalamos los datos, para que los genes con mucha expresion no dominen los analisis posteriores
+seuobject <- ScaleData( seuobject,
+                        features = all.genes )
+
+# Realizamos el PCA
+seuobject <- RunPCA( object = seuobject )
+
+# imprimimos los primeros 5 componentes principales
+# Y senialamos los 5 primeros genes que influyen en ese componente
+print( seuobject[["pca"]],
+       dims = 1:5,
+       nfeatures = 5 )
+
+```
+
+# Elbow plot para los PCs
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# HAcemos un elbow plot para ver la varianza explicada por cada PC
+ElbowPlot( seuobject )
+
+```
+
+# Peso (loadings) en los PCs
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 10, 10 ) }
+# Observamos para N componentes, la influencia de los genes
+VizDimLoadings( object = seuobject,
+                dims = 1:2,
+                reduction = "pca" )
+```
+
+# PC1 vs PC2
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# Observamos el scater de los primeros 2 componentes
+DimPlot( object = seuobject,
+         reduction = "pca",
+         dims = c(1, 2) )
+```
+
+# Heatmaps for diff PCs
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# Cramos un heatmap para el PC1
+DimHeatmap( object = seuobject,
+            dims = 1,
+            cells = 500,
+            balanced = TRUE )
+
+# Puedes pedir varios heatmaps al mismo tiempo
+DimHeatmap( object = seuobject,
+            dims = 1:15,
+            cells = 500,
+            balanced = TRUE )
+```
+
+# UMAPping
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 10, 10 ) }
+
+seuobject <- FindNeighbors( seuobject,
+                            dims = 1:10 )
+seuobject <- FindClusters( seuobject,
+                           resolution = 0.5 )
+
+head( Idents( seuobject ), 5 )
+
+# hacemos el umap
+seuobject <- RunUMAP( seuobject,
+                      n.neighbors = as.numeric( nneighbors_forumap ),
+                      dims = 1:10 )
+
+# Vis
+DimPlot( object = seuobject,
+         reduction = "umap", pt.size = 1 )
+
+```
+
+# Se calcula el numero de celulas por cada cluster de umap
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 10, 10 )  }
+labeled_summary1 <- data.frame( cell_type = Idents( object = seuobject ) ) %>% 
+  group_by( cell_type ) %>% 
+  summarise( n_cells = n( ) )
+
+# how many cells per label
+
+cell_bars1 <- ggplot( data = labeled_summary1,
+                      mapping = aes( x = cell_type,
+                                     y = n_cells ) ) +
+  geom_col( fill = "gray50",
+            color = "gray50" ) +
+  geom_text( mapping = aes( label = n_cells ), nudge_y = max( labeled_summary1$n_cells ) / 10 ) +
+  scale_y_continuous( limits = c(0, max( labeled_summary1$n_cells ) * 1.15 ),
+                      expand = c( 0, 0 ) ) +
+  labs( title = "Number of cells per label",
+        caption = paste( "Total cells:", sum( labeled_summary1$n_cells ) ) ) +
+  theme_classic( ) +
+  theme( axis.text.x = element_text( angle = 90, hjust = 1, vjust = 0.5 ) )
+
+cell_bars1
+```
+
+# Se muestras los primeros 5 Marcadores de clusters
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+
+seuobject.markers <- FindAllMarkers( object = seuobject,
+                                     only.pos = TRUE,          #
+                                     min.pct = 0.25,
+                                     logfc.threshold = 0.25 )  # le estamos pidiendo que solo analice los genes con un FC minimo de 0.25
+
+
+# revisa si hay genes marcadores, si no hay, se salta esta parte
+if ( nrow( seuobject.markers ) > 0 ) {
+  seuobject.markers %>%
+    group_by(cluster) %>%
+    slice_max( n = 5,
+               order_by = avg_log2FC ) %>%
+    knitr::kable( )  
+}
+
+
+```
+
+# Heatmap para los 5 principales marcadores de cada PC
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+# revisa si hay genes marcadores, si no hay, se salta esta parte
+if ( nrow( seuobject.markers ) > 0 ) {
+  
+  # Primero saca los diez genes mas sobreexpresados de cada cluter de celulas
+  top10 <- seuobject.markers %>%
+    group_by(cluster) %>%
+    top_n( n = 5,
+           wt = avg_log2FC )
+  
+  # Aqui ya hace el heatmap
+  DoHeatmap( object = seuobject,
+             features = top10$gene )
+}
+
+```
+# Mostramos la distribucion de transcritos entre agrupamientos
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 10, 10 )  }
+genes_of_interest <- c( "CCR7", "CD45", "CD28", "CD95")
+
+# for testing only, find genes
+rownames( seuobject )[ rownames( seuobject ) %>% str_detect( pattern = "CD4.*" ) ]
+
+
+RidgePlot( object = seuobject, features = genes_of_interest )
+```
+
+# Etiquetamos los clusters UMAP con singleR, usando como referencia celldex::HumanPrimaryCellAtlasData( )$label.main
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 10, 10 )  }
+# Practicamos el etiquetado automatico
+library( "SingleR" )
+library( "celldex" )
+library( "SingleCellExperiment" )
+
+# creamos el objeto con la referencia
+ref <- celldex::HumanPrimaryCellAtlasData( )
+
+# tag the seurat data
+tagged <- SingleR( test = as.SingleCellExperiment( x = seuobject ),
+                   ref = ref, labels = ref$label.main )
+
+
+# view tagged
+tagged
+
+# label the seurat object
+seuobject$singler_labels <- tagged$labels
+
+# note that you can set `label = TRUE` or use the LabelClusters function to help label
+# individual clusters
+DimPlot( seuobject, reduction = "umap", label = TRUE, group.by = "singler_labels" )
+
+# Viz by expression
+# Re-identify
+seuobject_labeled1 <- seuobject
+Idents( object = seuobject_labeled1 ) <- seuobject$singler_labels
+RidgePlot( object = seuobject_labeled1, features = genes_of_interest )
+```
+
+#  DEPRECATED Etiquetamos los clusters UMAP con singleR, usando como referencia celldex::HumanPrimaryCellAtlasData( )$label.fine
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 10, 10 ) }
+# tag the seurat data
+tagged2 <- SingleR( test = as.SingleCellExperiment( x = seuobject ),
+                    ref = ref, labels = ref$label.fine )
+
+
+# view tagged
+tagged2
+
+# label the seurat object
+seuobject$singler_labels_fine <- tagged2$labels
+
+# note that you can set `label = TRUE` or use the LabelClusters function to help label
+# individual clusters
+DimPlot( seuobject, reduction = "umap", label = TRUE, group.by = "singler_labels_fine" )
+
+# Viz by expression
+# Re-identify
+seuobject_labeled2 <- seuobject
+Idents( object = seuobject_labeled2 ) <- seuobject$singler_labels_fine
+RidgePlot( object = seuobject_labeled2, features = genes_of_interest )
+```
+
+# Cambiamos las identidades de las celulas despues de la anotacion  
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 7, 7 ) }
+# duplicate object
+seuobject_labeled <- seuobject
+
+# Re-identify
+Idents( object = seuobject_labeled ) <- seuobject$singler_labels
+
+labeled_summary <- data.frame( cell_type = Idents( object = seuobject_labeled ) ) %>% 
+  group_by( cell_type ) %>% 
+  summarise( n_cells = n( ) )
+
+# how many cells per label
+
+cell_bars <- ggplot( data = labeled_summary,
+                     mapping = aes( x = cell_type,
+                                    y = n_cells ) ) +
+  geom_col( fill = "gray50",
+            color = "gray50" ) +
+  geom_text( mapping = aes( label = n_cells ), nudge_y = max( labeled_summary$n_cells ) / 10 ) +
+  scale_y_continuous( limits = c(0, max( labeled_summary$n_cells ) * 1.15 ),
+                      expand = c( 0, 0 ) ) +
+  labs( title = "Number of cells per label",
+        caption = paste( "Total cells:", sum( labeled_summary$n_cells ) ) ) +
+  theme_classic( ) +
+  theme( axis.text.x = element_text( angle = 90, hjust = 1, vjust = 0.5 ) )
+
+#Viz
+# cell_bars
+
+```
+
+# Comparamos la concordancia entre cluster umap y label SingleR  
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c( 14, 14 ) }
+# Obtenemos las columnas relevantes
+cluster_compare_data <- data.frame( seuobject$seurat_clusters,
+                                    seuobject.singler_labels = factor( seuobject$singler_labels,
+                                                                       levels = labeled_summary$cell_type ),
+                                    seuobject$singler_labels_fine  ) %>% 
+  mutate( cell_tag = row.names( . ) )
+
+# summarise the combinations
+cluster_compare_summarised <- cluster_compare_data %>% 
+  group_by( seuobject.singler_labels,
+            seuobject.seurat_clusters ) %>% 
+  summarise( n_cells = n( ) ) %>% 
+  ungroup( ) %>% 
+  group_by( seuobject.singler_labels ) %>% 
+  mutate( singleR_label_total = sum( n_cells ),
+          singleR_label_percentage = n_cells / singleR_label_total )
+
+# clustering concordance plot
+clustering_heatmap <- ggplot( data = cluster_compare_summarised,
+                              mapping = aes( x = seuobject.singler_labels,
+                                             y = seuobject.seurat_clusters,
+                                             fill = singleR_label_percentage,
+                                             label = percent( singleR_label_percentage, accuracy = 0.1 ) ) ) +
+  geom_tile( ) +
+  geom_text( ) +
+  scale_fill_gradient( low = "skyblue",
+                       high = "limegreen",
+                       limits = c( 0, 1 ),
+                       label = percent ) +
+  theme_light( ) +
+  theme( axis.text.x = element_text( angle = 90, hjust = 1 ),
+         panel.grid = element_blank( ),
+         legend.position = "top" )
+
+# make a panel
+# make a panel
+clustering_panel <- plot_grid( cell_bars +
+                                 theme( axis.text.x = element_text( size = 7 ),
+                                        axis.title.x = element_blank( ),
+                                        plot.title = element_blank( ) ),
+                               clustering_heatmap +
+                                 theme( 
+                                   # axis.title.x = element_blank( ),
+                                   axis.text.x = element_blank( ),
+                                   axis.ticks.x = element_blank( ),
+                                   legend.position = "none" ),
+                               ncol = 1,
+                               align = "v",
+                               rel_heights = c( 0.4, 0.6 )  )
+
+# Viz
+clustering_panel
+
+# Convert to a ggplot and print
+legend <- as_ggplot( get_legend( clustering_heatmap + theme(  legend.position = "left"  ) ) )
+
+# Make a side panel
+clustering_panel2 <- plot_grid( legend,
+                                cell_bars1 +
+                                  coord_flip( ) +
+                                  theme( plot.margin = unit( c( 0, 0, 0, 0 ), "cm" ),
+                                         axis.title.y = element_blank( ),
+                                         axis.text.x = element_blank( ),
+                                         axis.ticks.x = element_blank( ),
+                                         plot.title = element_blank( ),
+                                         plot.caption = element_blank( )
+                                  ) ,
+                                ncol = 1,
+                                align = "h",
+                                rel_heights = c( 0.4, 0.6 )  ) 
+
+final_panel_heatmap <- plot_grid( clustering_panel,
+                                  clustering_panel2,
+                                  nrow = 1,
+                                  align = "h",
+                                  rel_widths = c( 0.6, 0.4 ) )
+
+# Viz
+final_panel_heatmap
+
+```
+
+# Se muestras los primeros 10 Marcadores de clusters
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+
+seuobject_labeled.markers <- FindAllMarkers( object = seuobject_labeled,
+                                             only.pos = TRUE,          #
+                                             min.pct = 0.25,
+                                             logfc.threshold = 0.25 )  # le estamos pidiendo que solo analice los genes con un FC minimo de 0.25
+
+
+# revisa si hay genes marcadores, si no hay, se salta esta parte
+if ( nrow( seuobject_labeled.markers ) > 0 ) {
+  seuobject_labeled.markers %>%
+    group_by(cluster) %>%
+    slice_max( n = 10,
+               order_by = avg_log2FC ) %>%
+    knitr::kable( )  
+}
+
+
+```
+
+# Heatmap para los 10 principales marcadores de cada PC
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c(10, 10) }
+# revisa si hay genes marcadores, si no hay, se salta esta parte
+if ( nrow( seuobject_labeled.markers ) > 0 ) {
+  
+  # Primero saca los diez genes mas sobreexpresados de cada cluter de celulas
+  top10 <- seuobject_labeled.markers %>%
+    group_by(cluster) %>%
+    top_n( n = 10,
+           wt = avg_log2FC )
+  
+  # Aqui ya hace el heatmap
+  DoHeatmap( object = seuobject_labeled,
+             features = top10$gene,
+             size = 2, angle = 90 ) +
+    NoLegend( ) +
+    theme( axis.text = element_text( size = 4 ) )
+}
+
+```
+
+# Visualizamos la expresion de diferentes genes en diferentes clusters
+```{r, echo = FALSE, message = FALSE, warning = FALSE, fig.dim = c(10, 10) }
+# Counts <- GetAssayData( object = seuobject,
+#                                    slot = 'counts' )$SCT@counts
+
+# sacar los conteos
+counts.df <- as.data.frame( seuobject@assays$RNA@counts )
+
+# calcular Total reads per sample
+total_per_sample <- data.frame( total_counts = colSums( counts.df ) ) %>% 
+  mutate( cell_tag = row.names( . ) )
+
+# calcular el vector logico de las filas de interes
+rows_of_interest <- rownames( counts.df ) %in% genes_of_interest
+
+# sacar conteos de interes
+counts_of_interest <- counts.df[ rows_of_interest, ]
+
+# pasamos a formato long
+counts_of_interest_long <- counts_of_interest %>% 
+  mutate( feature = rownames( . ) ) %>% 
+  pivot_longer( data = .,
+                cols = -feature,
+                names_to = "cell_tag",
+                values_to = "counts" ) %>% 
+  left_join( x = .,
+             y = cluster_compare_data,
+             by = "cell_tag" ) %>% 
+  left_join( x = .,
+             y = total_per_sample,
+             by = "cell_tag" ) %>% 
+  mutate( counts_un_total=  counts / total_counts,
+          TPM = counts_un_total * 1e6 )
+
+# create a theme
+mytheme1 <- theme( axis.text.x = element_text( angle = 90, hjust = 0.5, vjust = 0.5 ) )
+
+# Total counts by tag
+ggplot( data = counts_of_interest_long %>% 
+          select( -feature ) %>% 
+          unique( ),
+        mapping = aes( x = seuobject.seurat_clusters,
+                       y = total_counts ) ) + 
+  geom_violin( fill = "skyblue" ) +
+  theme_classic( ) +
+  mytheme1
+
+# Total counts by tag
+ggplot( data = counts_of_interest_long %>% 
+          select( -feature ) %>% 
+          unique( ),
+        mapping = aes( x = seuobject.singler_labels,
+                       y = total_counts ) ) + 
+  geom_violin( fill = "skyblue" ) +
+  theme_classic( ) +
+  mytheme1
+
+# Total counts by tag
+ggplot( data = counts_of_interest_long %>% 
+          select( -feature ) %>% 
+          unique( ),
+        mapping = aes( x = seuobject.singler_labels_fine,
+                       y = total_counts ) ) + 
+  geom_violin( fill = "skyblue" ) +
+  theme_classic( ) +
+  mytheme1
+
+### Viz of TPM by group ----
+ggplot( data = counts_of_interest_long,
+        mapping = aes( x = seuobject.seurat_clusters,
+                       y = TPM,
+                       fill = feature ) ) +
+  geom_boxplot( ) +
+  theme_light( ) +
+  facet_wrap( ~feature, ncol = 1, strip.position = "left" ) +
+  theme( legend.position = "none",
+         strip.background = element_rect( fill = "white", color = "black" ),
+         strip.text = element_text( color = "black" ) ) +
+  mytheme1
+
+### Viz of TPM by group ----
+ggplot( data = counts_of_interest_long,
+        mapping = aes( x = seuobject.singler_labels,
+                       y = TPM,
+                       fill = feature ) ) +
+  geom_boxplot( ) +
+  theme_light( ) +
+  facet_wrap( ~feature, ncol = 1, strip.position = "left" ) +
+  theme( legend.position = "none",
+         strip.background = element_rect( fill = "white", color = "black" ),
+         strip.text = element_text( color = "black" ) ) +
+  mytheme1
+
+### Viz of TPM by group ----
+ggplot( data = counts_of_interest_long,
+        mapping = aes( x = seuobject.singler_labels_fine,
+                       y = TPM,
+                       fill = feature ) ) +
+  geom_boxplot( ) +
+  theme_light( ) +
+  facet_wrap( ~feature, ncol = 1, strip.position = "left" ) +
+  theme( legend.position = "none",
+         strip.background = element_rect( fill = "white", color = "black" ),
+         strip.text = element_text( color = "black" ) ) +
+  mytheme1
+
+```
+

@@ -118,7 +118,7 @@ params.intermediates_dir =  "${params.output_dir}/${params.pipeline_name}-interm
 /* load workflows */
 include { DOWNLOAD_REF }  from  './modules/pre01-downloadreference'
 include { MKFASTQ }       from  './modules/01-mkfastq'
-include { CELRANGER_COUNTS }  from  './modules/02-count'
+include { CELLRANGER_COUNTS }  from  './modules/02-count'
 
 workflow prepare_references {
 
@@ -146,8 +146,8 @@ workflow mainflow {
   main:
   fastqdir_ch = MKFASTQ ()
 
-  CELRANGER_COUNTS ( fastqdir_ch, transcriptome )
-
+  CELLRANGER_COUNTS ( fastqdir_ch, transcriptome )
+  // .view()
 }
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

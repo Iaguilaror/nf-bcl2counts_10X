@@ -4,7 +4,7 @@ nextflow.enable.dsl=2
 /* Define the main processes */
 process mkfastq {
 
-	publishDir "${params.results_dir}/mkfastq/", mode:"copy"
+	publishDir "${params.results_dir}/mkfastq/", mode:"copyNoFollow"
 
   input:
     path BCLDIR
