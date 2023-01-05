@@ -61,11 +61,10 @@ workflow CELRANGER_COUNTS {
 
     take:
         fastqdir
+        transcriptome_ch
 
     main:
         def samplesheet_ch = Channel.fromPath( params.samplesheet )
-        def transcriptome_ch = Channel.fromPath( params.reference )
-
         def samplenames_ch = separate_samples( samplesheet_ch ) | flatten
 
         counts( samplenames_ch, fastqdir, transcriptome_ch )

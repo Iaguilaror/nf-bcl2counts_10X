@@ -13,6 +13,9 @@ include { CELRANGER_COUNTS }    from './main.nf'
 /* declare input channel for testing */
 fastqdir = Channel.fromPath( "test/data" )
 
+/* declare function to load reference into channel */
+def transcriptome_ch = Channel.fromPath( params.reference )
+
 workflow {
-  CELRANGER_COUNTS ( fastqdir )
+  CELRANGER_COUNTS ( fastqdir, transcriptome_ch )
 }

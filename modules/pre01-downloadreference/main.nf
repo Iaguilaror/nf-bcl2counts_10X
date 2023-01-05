@@ -6,7 +6,7 @@ process download_reference {
 	publishDir "${params.ref_parentdir}", mode:"copy"
 
   output:
-    file "*"
+    path "*", emit: download_reference_results
   
   script:
     """
@@ -18,5 +18,10 @@ process download_reference {
 }
 
 workflow DOWNLOAD_REF {
+
+  main:
   download_reference | view { }     // view{ } helps us test the mod individually
+
+  emit:
+    download_reference.out[0]
 }

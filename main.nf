@@ -120,16 +120,25 @@ include { DOWNLOAD_REF }  from  './modules/pre01-downloadreference'
 include { MKFASTQ }       from  './modules/01-mkfastq'
 include { CELRANGER_COUNTS }  from  './modules/02-count'
 
-workflow {
+workflow prepare_references {
 
+  main:
   if ( ! file( params.reference ).exists( ) ){
+
     println " [>..] Reference directory not found. It will be downloaded and created"
-    DOWNLOAD_REF ( )
+    transcriptome_ch = DOWNLOAD_REF ( )
+    
+  } else {
+    /* declare function to load reference into channel */
+    transcriptome_ch = Channel.fromPath( params.reference )
   }
 
-  def fastqdir_ch = MKFASTQ ()
+  emit:
+    transcriptome_ch
 
-  CELRANGER_COUNTS ( fastqdir_ch )
+  // def fastqdir_ch = MKFASTQ ()
+
+  // CELRANGER_COUNTS ( fastqdir_ch, transcriptome_ch )
 
 }
 
@@ -143,9 +152,12 @@ workflow {
 // WORKFLOW: Execute a single named workflow for the pipeline
 // See: https://github.com/nf-core/rnaseq/issues/619
 //
-// workflow {
-//     NFCORE_RNASEQ ()
-// }
+workflow {
+    prepare_references ()
+
+    prepare_references.out[0]
+    .view()
+}
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
