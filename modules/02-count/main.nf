@@ -23,7 +23,7 @@ process separate_samples {
 
 process counts {
 
-	publishDir "${params.results_dir}", mode:"copy"
+	publishDir "${params.results_dir}/count/", mode:"copy"
 
     input:
         path SAMPLENAME
@@ -64,7 +64,8 @@ workflow CELRANGER_COUNTS {
 
     main:
         def samplesheet_ch = Channel.fromPath( params.samplesheet )
-        def transcriptome_ch = Channel.fromPath( params.transcriptome )
+        def transcriptome_ch = Channel.fromPath( params.reference )
+
         def samplenames_ch = separate_samples( samplesheet_ch ) | flatten
 
         counts( samplenames_ch, fastqdir, transcriptome_ch )

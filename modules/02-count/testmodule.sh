@@ -14,7 +14,7 @@ mkdir -p test/results
 nextflow run testmodule.nf \
     --debug true \
     --samplesheet       "../01-mkfastq/test/tinytest/cellranger-tiny-bcl-simple-1.2.0.csv" \
-    --transcriptome     "test/reference/GRCh38_miniref" \
+    --reference         "test/reference/GRCh38_miniref" \
     --chemistry         "SC3Pv2" \
     --counts_nproc      "1" \
     --counts_maxmem     "1" \

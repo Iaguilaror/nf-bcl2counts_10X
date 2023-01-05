@@ -117,7 +117,8 @@ params.intermediates_dir =  "${params.output_dir}/${params.pipeline_name}-interm
 
 /* load workflows */
 include { DOWNLOAD_REF }  from  './modules/pre01-downloadreference'
-include { MKFASTQ }  from  './modules/01-mkfastq'
+include { MKFASTQ }       from  './modules/01-mkfastq'
+include { CELRANGER_COUNTS }  from  './modules/02-count'
 
 workflow {
 
@@ -126,35 +127,11 @@ workflow {
     DOWNLOAD_REF ( )
   }
 
-  MKFASTQ ()
+  def fastqdir_ch = MKFASTQ ()
+
+  CELRANGER_COUNTS ( fastqdir_ch )
 
 }
-
-// params.str = 'Hello world!'
-
-// process splitLetters {
-//   output:
-//     path 'chunk_*'
-
-//   """
-//   printf '${params.str}' | split -b 6 - chunk_
-//   """
-// }
-
-// process convertToUpper {
-//   input:
-//     path x
-//   output:
-//     stdout
-
-//   """
-//   cat $x | tr '[a-z]' '[A-Z]'
-//   """
-// }
-
-// workflow {
-//   splitLetters | flatten | convertToUpper | view { it.trim() }
-// }
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -12,14 +12,14 @@ echo -e "======\n Testing NF execution \n======" \
     --samplesheet   "test/data/tinytest/cellranger-tiny-bcl-simple-1.2.0.csv" \
     --mkfastq_nproc 	"1" \
     --mkfastq_maxmem	"1" \
-
-#  --simplecsv "test/data/tinytest/cellranger-tiny-bcl-simple-1.2.0.csv" \
-#	--chemistry "SC3Pv2" \
+	--counts_nproc      "1" \
+    --counts_maxmem     "1" \
+	--chemistry "SC3Pv2" \
+	-resume \
+	-with-report $output_directory/`date +%Y%m%d_%H%M%S`_report.html \
+	-with-dag $output_directory/`date +%Y%m%d_%H%M%S`.DAG.html
 #	--nfeatures "0" \
 #	--nneighbors "25" \
 #  --threads 1 \
 #  --maxmem 1 \
-#	-resume \
-#	-with-report $output_directory/`date +%Y%m%d_%H%M%S`_report.html \
-#	-with-dag $output_directory/`date +%Y%m%d_%H%M%S`.DAG.html \
 #&& echo -e "======\n Basic pipeline TEST SUCCESSFUL \n======"
