@@ -95,19 +95,19 @@ nf-bcl2counts_10X/test/results/bcl2fastq_10X-results/
 To run nf-bcl2counts_10X go to the pipeline directory and execute:
 ```
 nextflow run main.nf \
---input_dir		<path to BCL directory> \
---output_dir	<path to results> \
---reference		<path to reference directory for cellranger; will be created> \
---ref_url		<URL to download the .tar.gz cellranger reference> \
+--input_dir   <path to BCL directory> \
+--output_dir    <path to results> \
+--reference   <path to reference directory for cellranger; will be created> \
+--ref_url   <URL to download the .tar.gz cellranger reference> \
 --samplesheet   <path to the .csv file with samplesheet data> \
---mkfastq_nproc 	<number of CPU threads for cellranger mkfastq> \
---mkfastq_maxmem	<max RAM for cellranger mkfastq> \
---counts_nproc      <number of CPU threads for cellranger count> \
---counts_maxmem     <max RAM for cellranger count> \
---chemistry 		<Chemistry type. By default is "auto> \
---seurat_nfeatures  <nFeature_RNA cutoff for filtering cells with less than this value> \
---seurat_nneighbors <number of neighboring points used in local approximations for UMAP> \
--resume				<resume pipeline run from the last sucessful process>
+--mkfastq_nproc   <number of CPU threads for cellranger mkfastq> \
+--mkfastq_maxmem    <max RAM for cellranger mkfastq> \
+--counts_nproc    <number of CPU threads for cellranger count> \
+--counts_maxmem   <max RAM for cellranger count> \
+--chemistry   <Chemistry type. By default is "auto> \
+--seurat_nfeatures    <nFeature_RNA cutoff for filtering cells with less than this value> \
+--seurat_nneighbors   <number of neighboring points used in local approximations for UMAP> \
+-resume   <resume pipeline run from the last sucessful process>
 ```
 
 For information about options and parameters, run:
