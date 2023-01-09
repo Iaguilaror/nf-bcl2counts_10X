@@ -142,4 +142,4 @@ bash testmodule.sh
 └── testmodule.sh       ## A quick bash script to run the whole test
 ````
 ## References
-* https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/tutorial_fq
+* https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/tutorial_ct
