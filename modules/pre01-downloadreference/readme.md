@@ -67,7 +67,7 @@ test/results/refdata-gex-GRCh38-2020-A/
 
 ## Testing the module:
 
-* Estimated test time:  **38 minutes**  
+* Estimated test time:  **38 minute(s)**  
 
 1. Test this module locally by running,
 ```

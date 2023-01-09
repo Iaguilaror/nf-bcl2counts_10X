@@ -1,151 +1,145 @@
-# 02-count
+# mkfastq
 **Author(s):**
 
-* Israel Aguilar-Ordonez (iaguilaror@gmail.com)
+* Israel Aguilar-Ordoñez (iaguilaror@gmail.com)
 
-**Date:** June 2022
+**Date:** December 2022  
 
 ---
 
-## Module description:
- Module that runs cellranger count.
+## Module description:  
 
- It takes FASTQ files from cellranger `mkfastq` and performs alignment, filtering, barcode counting, and UMI counting. It uses the Chromium cellular barcodes to generate feature-barcode matrices, determine clusters, and perform gene expression analysis. The count pipeline can take input from multiple sequencing runs on the same GEM well. cellranger count also processes Feature Barcode data alongside Gene Expression reads.
+A (DSL2) Nextflow module to create count matrixes with cellranger count.
+
+It takes FASTQ files from cellranger `mkfastq` and performs alignment, filtering, barcode counting, and UMI counting. It uses the Chromium cellular barcodes to generate feature-barcode matrices, determine clusters, and perform gene expression analysis. The count pipeline can take input from multiple sequencing runs on the same GEM well. cellranger count also processes Feature Barcode data alongside Gene Expression reads.
 
 ## Module Dependencies:
-cellranger-7.0.0 > [Download and compile](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/tutorial_in)
+
+| Requirement | Version  | Required Commands |
+|:---------:|:--------:|:-------------------:|
+| [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html) | 22.10.4 | nextflow |
+| [cellranger](https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest) | cellranger-7.1.0 | cellranger count |
 
 ### Input(s):
 
 * A fastq dir from `mkfastq` module.
+Example contents  
+```
+data/
+├── _cmdline
+├── _filelist
+├── _finalstate
+├── _invocation
+├── _jobmode
+├── _log
+├── MAKE_FASTQS_CS/
+│   ├── fork0
+│   └── MAKE_FASTQS
+├── _mrosource
+├── outs/
+│   ├── fastq_path/
+│   ├── input_samplesheet.csv
+│   └── interop_path/
+├── _perf
+├── results_mkfastq.mri.tgz
+├── _sitecheck
+├── _tags
+├── _timestamp
+├── _uuid
+├── _vdrkill
+└── _versions
+```
 
-* A transcriptome directory. Cell ranger dataset can de bownloaded from: https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest/
+* A `directory` with the uncompressed reference for cellranger counts  
+
+Example contents  
+```
+test/results/refdata-gex-GRCh38-2020-A/
+├── fasta/
+│   ├── genome.fa
+│   └── genome.fa.fai
+├── genes/
+│   └── genes.gtf
+├── pickle/
+│   └── genes.pickle
+├── reference.json
+└── star/
+    ├── chrLength.txt
+    ├── chrNameLength.txt
+    ├── chrName.txt
+    ├── chrStart.txt
+    ├── exonGeTrInfo.tab
+    ├── exonInfo.tab
+    ├── geneInfo.tab
+    ├── Genome/
+    ├── genomeParameters.txt
+    ├── SA/
+    ├── SAindex/
+    ├── sjdbInfo.txt
+    ├── sjdbList.fromGTF.out.tab
+    ├── sjdbList.out.tab
+    └── transcriptInfo.tab
+```
 
 ### Outputs:
 
-A results_count/outs/ directory with multiple outputs from the pipeline.
+A sample_cellrangercounts/outs/ directory with multiple outputs from the pipeline, including the count matrixes required by Seurat.  
 
+Example contents  
 ```
-results_count
-├── outs
-│   ├── analysis
-│   │   ├── clustering
-│   │   │   ├── gene_expression_graphclust
-│   │   │   │   └── clusters.csv
-│   │   │   ├── gene_expression_kmeans_10_clusters
-│   │   │   │   └── clusters.csv
-│   │   │   ├── gene_expression_kmeans_2_clusters
-│   │   │   │   └── clusters.csv
-│   │   │   ├── gene_expression_kmeans_3_clusters
-│   │   │   │   └── clusters.csv
-│   │   │   ├── gene_expression_kmeans_4_clusters
-│   │   │   │   └── clusters.csv
-│   │   │   ├── gene_expression_kmeans_5_clusters
-│   │   │   │   └── clusters.csv
-│   │   │   ├── gene_expression_kmeans_6_clusters
-│   │   │   │   └── clusters.csv
-│   │   │   ├── gene_expression_kmeans_7_clusters
-│   │   │   │   └── clusters.csv
-│   │   │   ├── gene_expression_kmeans_8_clusters
-│   │   │   │   └── clusters.csv
-│   │   │   └── gene_expression_kmeans_9_clusters
-│   │   │       └── clusters.csv
-│   │   ├── diffexp
-│   │   │   ├── gene_expression_graphclust
-│   │   │   │   └── differential_expression.csv
-│   │   │   ├── gene_expression_kmeans_10_clusters
-│   │   │   │   └── differential_expression.csv
-│   │   │   ├── gene_expression_kmeans_2_clusters
-│   │   │   │   └── differential_expression.csv
-│   │   │   ├── gene_expression_kmeans_3_clusters
-│   │   │   │   └── differential_expression.csv
-│   │   │   ├── gene_expression_kmeans_4_clusters
-│   │   │   │   └── differential_expression.csv
-│   │   │   ├── gene_expression_kmeans_5_clusters
-│   │   │   │   └── differential_expression.csv
-│   │   │   ├── gene_expression_kmeans_6_clusters
-│   │   │   │   └── differential_expression.csv
-│   │   │   ├── gene_expression_kmeans_7_clusters
-│   │   │   │   └── differential_expression.csv
-│   │   │   ├── gene_expression_kmeans_8_clusters
-│   │   │   │   └── differential_expression.csv
-│   │   │   └── gene_expression_kmeans_9_clusters
-│   │   │       └── differential_expression.csv
-│   │   ├── pca
-│   │   │   └── gene_expression_10_components
-│   │   │       ├── components.csv
-│   │   │       ├── dispersion.csv
-│   │   │       ├── features_selected.csv
-│   │   │       ├── projection.csv
-│   │   │       └── variance.csv
-│   │   ├── tsne
-│   │   │   └── gene_expression_2_components
-│   │   │       └── projection.csv
-│   │   └── umap
-│   │       └── gene_expression_2_components
-│   │           └── projection.csv
-│   ├── cloupe.cloupe
-│   ├── filtered_feature_bc_matrix
-│   │   ├── barcodes.tsv.gz
-│   │   ├── features.tsv.gz
-│   │   └── matrix.mtx.gz
-│   ├── filtered_feature_bc_matrix.h5
-│   ├── metrics_summary.csv
-│   ├── molecule_info.h5
-│   ├── possorted_genome_bam.bam
-│   ├── possorted_genome_bam.bam.bai
-│   ├── raw_feature_bc_matrix
-│   │   ├── barcodes.tsv.gz
-│   │   ├── features.tsv.gz
-│   │   └── matrix.mtx.gz
-│   ├── raw_feature_bc_matrix.h5
-│   └── web_summary.html
-└──results_count.mri.tgz
+results/
+└── count
+    └── test_sample_cellrangercounts
+        ├── ...
+        └──outs/
+        ├── filtered_feature_bc_matrix
+        │   ├── barcodes.tsv.gz
+        │   ├── features.tsv.gz
+        │   └── matrix.mtx.gz
+        ├── filtered_feature_bc_matrix.h5
+        ├── metrics_summary.csv
+        ├── molecule_info.h5
+        ├── raw_feature_bc_matrix
+        │   ├── barcodes.tsv.gz
+        │   ├── features.tsv.gz
+        │   └── matrix.mtx.gz
+        ├── raw_feature_bc_matrix.h5
+        └── web_summary.html
 ```
 
 ## Module parameters:
-Path to the directory with the transcriptome data
-```
-TRANSCRIPTOME="test/reference/refdata-gex-GRCh38-2020-A/"
-```
-Name of the output directory
-```
-OUTDIR="results_count"
-```
-Chemistry type. By default the assay configuration is detected automatically, which is the recommended mode. 
-For testing, as test-data are only 80 reads, auto mode fails.
-```
-CHEMISTRY="SC3Pv2" 
-```
-Number of threads
-```
-THREADS="8"
-```
-Maximum memory
-```
-MAXMEM="15"
-```
+
+| --param | example  | description |
+|:---------:|:--------:|:-------------------:|
+| --samplesheet | "test/tinytest/cellranger-tiny-bcl-simple-1.2.0.csv" | comma separated file describing the Lane Samples and Index used in the NGS experiment |
+| --reference | "test/reference/refdata-gex-GRCh38-2020-A" | Path to uncompressed cellranger reference |
+| --chemistry | "SC3Pv2" | Chemistry type. By default the assay configuration is detected automatically, which is the recommended mode. However, we use SC3Pv2 for testing, since as test-data are only 80 reads auto mode fails. |
+| --counts_nproc | "1" |  CPU threads for cellranger |
+| --counts_maxmem | "1" | Max RAM requested |
 
 ## Testing the module:
+
+* Estimated test time:  **4 minute(s)**  
 
 1. Test this module locally by running,
 ```
 bash testmodule.sh
 ```
 
-2. `[>>>] Module Test Successful` should be printed in the console...
+2.`[>>>] Module Test Successful` should be printed in the console.  
 
-## 02-count directory structure
+## module directory structure
 
 ````
-02-count  ## Module main directory
-├── mkfile  ## File in mk format, specifying the rules for building every result
-├── readme.md ## This document. General workflow description.
-├── runmk.sh  ## Script to print every file required by this module
-├── test  ## Test directory
-└── testmodule.sh ## Script to test module functunality using test data
+02-count/
+├── main.nf             ## Nextflow script with the main process. To be imported by the full pipeline 
+├── readme.md           ## This document
+├── test/               ## Directory with materials for test
+│   ├── data/           ## This dir includes the results from running cellranger mkfastq
+│   └── results/        ## This dir will be created after runing the test
+│       └── ...         ## See Outputs description
+├── testmodule.nf       ## A quick Nextflow script to run in a controled environment.
+└── testmodule.sh       ## A quick bash script to run the whole test
 ````
-
 ## References
-* Cell RangerTM R Kit Tutorial: Secondary Analysis on 10x GenomicsTM Single Cell 3’ RNA-seq PBMC Data. (n.d.). 10x Genomics. Retrieved July 11, 2017, from http://cf.10xgenomics.com/supp/cell-exp/cellrangerrkit-PBMC-vignette-knitr-1.1.0.pdf
-* What is Cell Ranger (2016, November 21). Retrieved July 11, 2017, from https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger
+* https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/tutorial_fq

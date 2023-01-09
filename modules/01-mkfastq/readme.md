@@ -75,7 +75,7 @@ results/
 
 ## Testing the module:
 
-* Estimated test time:  **1 minute**  
+* Estimated test time:  **1 minute(s)**  
 
 1. Test this module locally by running,
 ```
