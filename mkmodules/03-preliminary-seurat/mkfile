@@ -1,5 +1,0 @@
-MKSHELL="/bin/bash"
-
-%_seuratpreliminary.pdf:Q: %_cellrangercounts
-	echo "[DEBUG] create the Rmd report"
-  Rscript --vanilla runthermd.R $prereq $NFEATURES $NNEIGHBORS $target
