@@ -31,29 +31,50 @@ A (DSL2) Nextflow module to download pre-build reference for cellranger counts. 
 
 Example contents TODO
 ```
-K       CrossValidationError
-2       0.58244
-3       0.59174
-...
+test/results/refdata-gex-GRCh38-2020-A/
+├── fasta
+│   ├── genome.fa
+│   └── genome.fa.fai
+├── genes
+│   └── genes.gtf
+├── pickle
+│   └── genes.pickle
+├── reference.json
+└── star
+    ├── chrLength.txt
+    ├── chrNameLength.txt
+    ├── chrName.txt
+    ├── chrStart.txt
+    ├── exonGeTrInfo.tab
+    ├── exonInfo.tab
+    ├── geneInfo.tab
+    ├── Genome
+    ├── genomeParameters.txt
+    ├── SA
+    ├── SAindex
+    ├── sjdbInfo.txt
+    ├── sjdbList.fromGTF.out.tab
+    ├── sjdbList.out.tab
+    └── transcriptInfo.tab
 ```
 
 ## Module parameters:
 
-| parameter &nbsp; &nbsp; | description  | example |
+| parameter | description  | example |
 |:---------:|:--------:|:-------------------:|
 | --ref_url | URL to download compressed reference from 10x website | "https://cf.10xgenomics.com/supp/cell-exp/refdata-gex-GRCh38-2020-A.tar.gz" |
 | --reference | final path to move the uncompressed reference directory. | "test/results/refdata-gex-GRCh38-2020-A/" |
 
 ## Testing the module:
 
-* Estimated test time:  
+* Estimated test time:  37m 37s  
 
 1. Test this module locally by running,
 ```
 bash testmodule.sh
 ```
 
-2. `[>>>] Module Test Successful` should be printed in the console... TODO
+2. `Succeeded   : 1` should be printed in the console...
 
 ## module directory structure
 
