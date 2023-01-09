@@ -29,7 +29,7 @@ A (DSL2) Nextflow module to download pre-build reference for cellranger counts. 
 
 * A `directory` with the uncompressed reference for cellranger counts  
 
-Example contents TODO
+Example contents  
 ```
 test/results/refdata-gex-GRCh38-2020-A/
 ├── fasta
