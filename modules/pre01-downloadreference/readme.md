@@ -74,7 +74,7 @@ test/results/refdata-gex-GRCh38-2020-A/
 bash testmodule.sh
 ```
 
-2. `Succeeded   : 1` should be printed in the console...
+2. <span style="color:blue">Succeeded   : 1</span> should be printed in the console...
 
 ## module directory structure
 
