@@ -697,3 +697,7 @@ ggplot( data = counts_of_interest_long,
 
 ```
 
+# Print session info  
+```{r, echo = FALSE, message = FALSE, warning = FALSE }
+sessionInfo ()
+```

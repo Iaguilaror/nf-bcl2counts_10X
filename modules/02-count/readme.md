@@ -1,4 +1,4 @@
-# mkfastq
+# count
 **Author(s):**
 
 * Israel Aguilar-Ordoñez (iaguilaror@gmail.com)
@@ -83,7 +83,7 @@ test/results/refdata-gex-GRCh38-2020-A/
 
 ### Outputs:
 
-A sample_cellrangercounts/outs/ directory with multiple outputs from the pipeline, including the count matrixes required by Seurat.  
+* A sample_cellrangercounts/outs/ directory with multiple outputs from the pipeline, including the count matrixes required by Seurat.  
 
 Example contents  
 ```
