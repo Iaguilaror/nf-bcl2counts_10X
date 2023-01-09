@@ -18,4 +18,5 @@ nextflow run testmodule.nf \
     --chemistry         "SC3Pv2" \
     --counts_nproc      "1" \
     --counts_maxmem     "1" \
+&& echo "[>>>] Module Test Successful" \
 && rm -rf work                # delete workdir only if final results were found

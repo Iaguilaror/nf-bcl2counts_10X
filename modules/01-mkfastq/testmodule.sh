@@ -17,4 +17,5 @@ nextflow run testmodule.nf \
     --samplesheet       "test/tinytest/cellranger-tiny-bcl-simple-1.2.0.csv" \
     --mkfastq_nproc     "1" \
     --mkfastq_maxmem    "1" \
+&& echo "[>>>] Module Test Successful" \
 && rm -rf work                # delete workdir only if final results were found

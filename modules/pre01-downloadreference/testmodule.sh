@@ -15,4 +15,5 @@ nextflow run testmodule.nf \
   --debug true \
   --ref_url   "https://cf.10xgenomics.com/supp/cell-exp/refdata-gex-GRCh38-2020-A.tar.gz" \
   --reference "test/results/refdata-gex-GRCh38-2020-A/" \
+&& echo "[>>>] Module Test Successful" \
 && rm -rf work                # delete workdir only if final results were found

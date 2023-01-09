@@ -74,12 +74,20 @@ test/results/refdata-gex-GRCh38-2020-A/
 bash testmodule.sh
 ```
 
-2. <span style="color:blue">Succeeded   : 1</span> should be printed in the console...
+2.`[>>>] Module Test Successful` should be printed in the console.  
 
 ## module directory structure
 
 ````
-
+pre01-downloadreference/
+├── main.nf                             ## Nextflow script with the main process. To be imported by the full pipeline 
+├── readme.md                           ## This document
+├── test                                ## Directory with materials for test
+│   └── results                         ## This dir will be created after runing the test
+│       └── refdata-gex-GRCh38-2020-A   ## See Outputs description
+│           ├── ...                     ## See Outputs description
+├── testmodule.nf                       ## A quick Nextflow script to run in a controled environment.
+└── testmodule.sh                       ## A quick bash script to run the whole test
 ````
 ## References
 * https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest?
