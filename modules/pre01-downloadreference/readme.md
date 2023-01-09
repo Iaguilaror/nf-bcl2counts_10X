@@ -9,7 +9,7 @@
 
 ## Module description:  
 
-A (DSL2) Nextflow module to download pre-build reference for cellranger counts. The Human Reference for testing is downloaded from [https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest?]  
+A (DSL2) Nextflow module to download pre-build reference for cellranger counts. The Human Reference for testing is downloaded from https://support.10xgenomics.com/single-cell-gene-expression/software/downloads/latest?  
 
 ## Module Dependencies:
 | Requirement | Version  | Required Commands |
@@ -39,7 +39,7 @@ K       CrossValidationError
 
 ## Module parameters:
 
-| param | description  | example |
+| param &nbsp; &nbsp; | description  | example |
 |:---------:|:--------:|:-------------------:|
 | --ref_url | URL to download compressed reference from 10x website | "https://cf.10xgenomics.com/supp/cell-exp/refdata-gex-GRCh38-2020-A.tar.gz" |
 | --reference | final path to move the uncompressed reference directory. | "test/results/refdata-gex-GRCh38-2020-A/" |
