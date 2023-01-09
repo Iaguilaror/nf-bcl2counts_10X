@@ -13,7 +13,7 @@ mkdir -p test/results
 # run nf script
 nextflow run testmodule.nf \
     --debug true \
-    --bcl_inputdir      "test/tinytest/cellranger-tiny-bcl-1.2.0" \
+    --input_dir      "test/tinytest/cellranger-tiny-bcl-1.2.0" \
     --samplesheet       "test/tinytest/cellranger-tiny-bcl-simple-1.2.0.csv" \
     --mkfastq_nproc     "1" \
     --mkfastq_maxmem    "1" \

@@ -116,9 +116,14 @@ params.intermediates_dir =  "${params.output_dir}/${params.pipeline_name}-interm
 */
 
 /* load workflows */
-include { DOWNLOAD_REF }  from  './modules/pre01-downloadreference'
-include { MKFASTQ }       from  './modules/01-mkfastq'
-include { CELLRANGER_COUNTS }  from  './modules/02-count'
+include { DOWNLOAD_REF }        from  './modules/pre01-downloadreference'
+include { MKFASTQ }             from  './modules/01-mkfastq'
+include { CELLRANGER_COUNTS }   from  './modules/02-count'
+include { SEURAT_PRELIM }       from  './modules/03-preliminary-seurat'
+
+/* load scripts to send to workdirs */
+/* declare scripts channel from modules */
+scripts_seurat_prelim = Channel.fromPath( "./modules/03-preliminary-seurat/scripts/*" ).toList()
 
 workflow prepare_references {
 
@@ -146,8 +151,9 @@ workflow mainflow {
   main:
   fastqdir_ch = MKFASTQ ()
 
-  CELLRANGER_COUNTS ( fastqdir_ch, transcriptome )
-  // .view()
+  countsdir_ch = CELLRANGER_COUNTS ( fastqdir_ch, transcriptome )
+
+  SEURAT_PRELIM ( countsdir_ch, scripts_seurat_prelim )
 }
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

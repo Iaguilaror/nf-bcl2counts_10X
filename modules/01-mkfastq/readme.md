@@ -68,7 +68,7 @@ results/
 
 | --param | example  | description |
 |:---------:|:--------:|:-------------------:|
-| --bcl_inputdir | "test/tinytest/cellranger-tiny-bcl-1.2.0" | directory with BCL outputs from a 10X NGS run |
+| --input_dir | "test/tinytest/cellranger-tiny-bcl-1.2.0" | directory with BCL outputs from a 10X NGS run |
 | --samplesheet | "test/tinytest/cellranger-tiny-bcl-simple-1.2.0.csv" | comma separated file describing the Lane Samples and Index used in the NGS experiment |
 | --mkfastq_nproc | "1" | CPU threads for cellranger |
 | --mkfastq_maxmem | "1" | Max RAM requested |

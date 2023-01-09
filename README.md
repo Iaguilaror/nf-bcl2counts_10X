@@ -14,19 +14,20 @@ Nextflow Pipeline to process BCL files from Single Cell 10X experiments into Seu
 * Results include [SingleR annotation](https://aran-lab.com/software/singler/)
 * Scalability and reproducibility via a Nextflow-based framework.
 
-### TODO  
-* Refactor mkmodules into NextFlow DSL2
+### TO-DO(s)  
 * Dockerize each module
 
 ---
 
 ## Requirements
 #### Compatible OS*:
-* [Ubuntu 22.04.1 LTS](https://releases.ubuntu.com/22.04/)
 * [Ubuntu 20.04.5 LTS](https://releases.ubuntu.com/focal/)
 * [Ubuntu 18.04.6 LTS](http://releases.ubuntu.com/18.04/)
 
-\* nf-bcl2counts_10X may run in other UNIX based OS and versions, but testing is required.
+#### Incompatible OS*:
+* [Ubuntu 22.04.1 LTS](https://releases.ubuntu.com/22.04/) - as of January 2023. Failed to run Rmarkdown. Missing dependencies.  
+
+\* nf-bcl2counts_10X may run in other UNIX based OS and versions, but testing is required.  
 
 #### Command line Software required:
 | Requirement | Version  | Required Commands * |
@@ -40,23 +41,38 @@ Nextflow Pipeline to process BCL files from Single Cell 10X experiments into Seu
 
 \* These commands must be accessible from your `$PATH` (*i.e.* you should be able to invoke them from your command line).  
 
-\** Plan9 port builds many binaries, but you ONLY need the `mk` utility to be accessible from your command line.
-
 #### R packages required:
 
+```
+dplyr version: 1.0.10
+ggpubr version: 0.5.0
+ggplot2 version: 3.4.0
+hexbin version: 1.28.2
+ggsci version: 2.9
+scales version: 1.2.1
+cowplot version: 1.1.1
+pacman version: 0.5.1
+stringr version: 1.5.0
+tidyr version: 1.2.1
+Seurat version: 4.3.0
+BiocManager version: 1.30.19
+SingleCellExperiment version: 1.20.0
+SingleR version: 2.0.0
+celldex version: 1.8.0
+```
 
 ---
 
 ### Installation
-Download nf-100GMX-variant-summarizer from Github repository:  
+Download pipeline from Github repository:  
 ```
-git clone https://github.com/Iaguilaror/nf-100GMX-variant-summarizer
+git clone https://github.com/Iaguilaror/nf-bcl2counts_10X.git
 ```
 
 ---
 
 #### Test
-To test nf-100GMX-variant-summarizer's execution using test data, run:
+To test pipeline execution using test data, run:
 ```
 ./runtest.sh
 ```
@@ -64,101 +80,91 @@ To test nf-100GMX-variant-summarizer's execution using test data, run:
 Your console should print the Nextflow log for the run, once every process has been submitted, the following message will appear:
 ```
 ======
-VCF summarizer: Basic pipeline TEST SUCCESSFUL
+ Basic pipeline TEST SUCCESSFUL
 ======
 ```
 
-nf-100GMX-variant-summarizer results for test data should be in the following file:
+Pipeline results for test data should be in the following file:
 ```
-nf-100GMX-variant-summarizer/test/results/VCFsummarizer-results
+nf-bcl2counts_10X/test/results/bcl2fastq_10X-results/
 ```
 
 ---
 
 ### Usage
-To run nf-100GMX-variant-summarizer go to the pipeline directory and execute:
+To run nf-bcl2counts_10X go to the pipeline directory and execute:
 ```
-nextflow run summarize-vcf.nf --vcffile <path to input 1> --metadata <path to input 2> --nsamples <integer> --group_minaf <numeric> --outgroup_maxaf <numeric> [--output_dir path to results ]
+nextflow run main.nf \
+	--input_dir		<path to BCL directory> \
+	--output_dir	<path to results> \
+	--reference		<path to reference directory for cellranger; will be created> \
+	--ref_url		<URL to download the .tar.gz cellranger reference> \
+    --samplesheet   <path to the .csv file with samplesheet data> \
+    --mkfastq_nproc 	<number of CPU threads for cellranger mkfastq> \
+    --mkfastq_maxmem	<max RAM for cellranger mkfastq> \
+	--counts_nproc      <number of CPU threads for cellranger count> \
+    --counts_maxmem     <max RAM for cellranger count> \
+	--chemistry 		<Chemistry type. By default is "auto> \
+	--seurat_nfeatures  <nFeature_RNA cutoff for filtering cells with less than this value> \
+    --seurat_nneighbors <number of neighboring points used in local approximations for UMAP> \
+	-resume				<resume pipeline run from the last sucessful process>
 ```
 
 For information about options and parameters, run:
 ```
-nextflow run summarize-vcf.nf --help
+nextflow run main.nf --help
 ```
 
 ---
 
 ### Pipeline Inputs
-* A compressed vcf file with extension '.vcf.gz'; the VCF must be previously annotated with https://github.com/Iaguilaror/nf-VEPextended
 
-Example line(s):
+* A `BCL directory` created by a 10X NGS experiment.  
+Example contents  
 ```
-##fileformat=VCFv4.2
-#CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO
-chr21	5101724	.	G	A	.	PASS	AC=1;AF=0.00641;AN=152;DP=903;ANN=A|intron_variant|MODIFIER|GATD3B|ENSG00000280071|Transcript|ENST00000624810.3|protein_coding||4/5|ENST00000624810.3:c.357+19987C>T|||||||||-1|cds_start_NF&cds_end_NF|SNV|HGNC|HGNC:53816||5|||ENSP00000485439||A0A096LP73|UPI0004F23660|||||||chr21:g.5101724G>A||||||||||||||||||||||||||||2.079|0.034663||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-chr21	5102165	rs1373489291	G	T	.	PASS	AC=1;AF=0.00641;AN=140;DP=853;ANN=T|intron_variant|MODIFIER|GATD3B|ENSG00000280071|Transcript|ENST00000624810.3|protein_coding||4/5|ENST00000624810.3:c.357+19546C>A|||||||rs1373489291||-1|cds_start_NF&cds_end_NF|SNV|HGNC|HGNC:53816||5|||ENSP00000485439||A0A096LP73|UPI0004F23660|||||||chr21:g.5102165G>T||||||||||||||||||||||||||||5.009|0.275409||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-```
-
-* `*.tsv` : A metadata file, relating every sample ID (as registered in the VCF file) and a sample group in column format.
-
-Example line(s):
-```
-sample	group
-SM-3MG5L	Chinanteco
-SM-3MG5F	Chocholteco
-SM-3MG46	Kanjobal
+tinytest
+├── cellranger-tiny-bcl-1.2.0
+│   ├── Config/
+│   ├── Data/
+│   ├── InterOp/
+│   ├── RTAComplete.txt
+│   ├── RunInfo.xml
+│   └── runParameters.xml
+└── cellranger-tiny-bcl-simple-1.2.0.csv
 ```
 
+* A local `.csv samplesheet` describing the 10X NGS experiment.  
+Example lines  
+```
+Lane,Sample,Index
+1,test_sample,SI-P03-C9
+```
 ---
 
 ### Pipeline Results
-* A tsv file with `*.total_variants.tsv` extension.
 
-Example line(s):
-```
-# Variants in project sample.vcf.gz
-number of SNPs: 8769
-number of indels:       1231
-```
+* A `.pdf` RMarkdown with the Preliminary report by Seurat.
 
-* A tsv file with `*.persample_counts.tsv` extension.
-
-Example line(s):
-```
-sample SNV indel total_variants tstv_ratio missing_sites heterozygosity_ratio novel_total_variants worldwide_singletons clinvar_pato_likelypato_and_riskfactor_variants variants_in_gwascat variants_in_pgkb
-SM-3MG3L 3183 444 3627 2.196 4 1.091 1 10 0 6 0
-SM-3MG3M 3100 450 3550 2.173 1 1.115 1 13 0 5 0
-```
-
-* a tsv file named `private_variants_per_group.tsv`
-
-Example line(s):
-```
-group variant_type number
-Nahua snv 0
-Nahua indel 0
-Seri snv 2
-Seri indel 0
-```
 ---
 
 #### References
-Under the hood nf-100GMX-variant-summarizer uses some coding tools, please include the following ciations in your work:
+Under the hood nf-bcl2counts_10X uses some coding tools, please include the following ciations in your work:
 
-* McLaren, W., Gil, L., Hunt, S. E., Riat, H. S., Ritchie, G. R., Thormann, A., ... & Cunningham, F. (2016). The ensembl variant effect predictor. Genome biology, 17(1), 122.
-* Narasimhan, V., Danecek, P., Scally, A., Xue, Y., Tyler-Smith, C., & Durbin, R. (2016). BCFtools/RoH: a hidden Markov model approach for detecting autozygosity from next-generation sequencing data. Bioinformatics, 32(11), 1749-1751.
+* Di Tommaso, P., Chatzou, M., Floden, E. W., Barja, P. P., Palumbo, E., & Notredame, C. (2017). Nextflow enables reproducible computational workflows. Nature Biotechnology, 35(4), 316–319. doi:10.1038/nbt.3820
+
 * Team, R. C. (2017). R: a language and environment for statistical computing. R Foundation for Statistical Computing, Vienna. http s. www. R-proje ct. org.
+
+* Hao, Yuhan, et al. "Integrated analysis of multimodal single-cell data." Cell 184.13 (2021): 3573-3587.
+
+* Aran, Dvir, et al. "Reference-based analysis of lung single-cell sequencing reveals a transitional profibrotic macrophage." Nature immunology 20.2 (2019): 163-172.
 
 ---
 
 ### Contact
-If you have questions, requests, or bugs to report, please email
-<iaguilaror@gmail.com>
+If you have questions, requests, or bugs to report, open an issue in github, or email <iaguilaror@gmail.com>
 
 #### Dev Team
 Israel Aguilar-Ordonez <iaguilaror@gmail.com>   
 
 ### Cite us
-If you find this pipeline useful for your project, please cite us as:
-
-Aguilar-Ordoñez, Israel, et al. "Whole genome variation in 27 Mexican indigenous populations, demographic and biomedical insights." PloS one 16.4 (2021): e0249773.
+ TO-DO
