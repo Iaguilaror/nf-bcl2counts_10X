@@ -1,8 +1,11 @@
 # nf-bcl2counts_10X
 Nextflow Pipeline to process BCL files from Single Cell 10X experiments into Seurat reports
 
-===
-'nf-bcl2counts_10X' is a pipeline tool that takes BCL files and a sample sheet to generate fastq's and analyze them into R markdown reports of Seurat SingleCell analysis. This pipeline generates N outputs: 1) a fastq.gz set of files for each sample declared in the sample sheet; 2) an "outs" directory with cellranger count matrixes, raw and filtered; 3) a PDF file with a preliminary Seurat analysis, showing number of cells, filtered cells, UMAP clustering, and singleR cell annotation.  
+===  
+'nf-bcl2counts_10X' is a pipeline tool that takes BCL files and a sample sheet to generate fastq's and analyze them into R markdown reports of Seurat SingleCell analysis. This pipeline generates N outputs:  
+1) a fastq.gz set of files for each sample declared in the sample sheet;  
+2) an "outs" directory with cellranger count matrixes, raw and filtered;  
+3) a PDF file with a preliminary Seurat analysis, showing number of cells, filtered cells, UMAP clustering, and singleR cell annotation.  
 
 ---
 
