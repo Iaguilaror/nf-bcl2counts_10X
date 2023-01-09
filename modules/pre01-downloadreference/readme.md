@@ -60,7 +60,7 @@ test/results/refdata-gex-GRCh38-2020-A/
 
 ## Module parameters:
 
-| parameter | description  | example |
+| --parameter | description  | example |
 |:---------:|:--------:|:-------------------:|
 | --ref_url | URL to download compressed reference from 10x website | "https://cf.10xgenomics.com/supp/cell-exp/refdata-gex-GRCh38-2020-A.tar.gz" |
 | --reference | final path to move the uncompressed reference directory. | "test/results/refdata-gex-GRCh38-2020-A/" |
