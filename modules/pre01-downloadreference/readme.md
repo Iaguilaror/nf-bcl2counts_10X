@@ -32,15 +32,15 @@ A (DSL2) Nextflow module to download pre-build reference for cellranger counts. 
 Example contents  
 ```
 test/results/refdata-gex-GRCh38-2020-A/
-├── fasta
+├── fasta/
 │   ├── genome.fa
 │   └── genome.fa.fai
-├── genes
+├── genes/
 │   └── genes.gtf
-├── pickle
+├── pickle/
 │   └── genes.pickle
 ├── reference.json
-└── star
+└── star/
     ├── chrLength.txt
     ├── chrNameLength.txt
     ├── chrName.txt
@@ -48,10 +48,10 @@ test/results/refdata-gex-GRCh38-2020-A/
     ├── exonGeTrInfo.tab
     ├── exonInfo.tab
     ├── geneInfo.tab
-    ├── Genome
+    ├── Genome/
     ├── genomeParameters.txt
-    ├── SA
-    ├── SAindex
+    ├── SA/
+    ├── SAindex/
     ├── sjdbInfo.txt
     ├── sjdbList.fromGTF.out.tab
     ├── sjdbList.out.tab
@@ -60,14 +60,14 @@ test/results/refdata-gex-GRCh38-2020-A/
 
 ## Module parameters:
 
-| --param | description  | example |
+| --param | example  | description |
 |:---------:|:--------:|:-------------------:|
-| --ref_url | URL to download compressed reference from 10x website | "https://cf.10xgenomics.com/supp/cell-exp/refdata-gex-GRCh38-2020-A.tar.gz" |
-| --reference | final path to move the uncompressed reference directory. | "test/results/refdata-gex-GRCh38-2020-A/" |
+| --ref_url | "https://cf.10xgenomics.com/supp/cell-exp/refdata-gex-GRCh38-2020-A.tar.gz" | URL to download compressed reference from 10x website |
+| --reference | "test/results/refdata-gex-GRCh38-2020-A/" | final path to move the uncompressed reference directory |
 
 ## Testing the module:
 
-* Estimated test time:  **37m 37s**  
+* Estimated test time:  **38 minutes**  
 
 1. Test this module locally by running,
 ```
@@ -82,10 +82,10 @@ bash testmodule.sh
 pre01-downloadreference/
 ├── main.nf                             ## Nextflow script with the main process. To be imported by the full pipeline 
 ├── readme.md                           ## This document
-├── test                                ## Directory with materials for test
-│   └── results                         ## This dir will be created after runing the test
-│       └── refdata-gex-GRCh38-2020-A   ## See Outputs description
-│           ├── ...                     ## See Outputs description
+├── test/                               ## Directory with materials for test
+│   └── results/                        ## This dir will be created after runing the test
+│       └── refdata-gex-GRCh38-2020-A/  ## See Outputs description
+│           └── ...                     ## See Outputs description
 ├── testmodule.nf                       ## A quick Nextflow script to run in a controled environment.
 └── testmodule.sh                       ## A quick bash script to run the whole test
 ````
