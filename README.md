@@ -15,10 +15,11 @@ Nextflow Pipeline to process BCL files from Single Cell 10X experiments into Seu
 * Supports BCL files and samplesheet from 10X experiments
 * Results include UMAP clustering
 * Results include [SingleR annotation](https://aran-lab.com/software/singler/)
-* Scalability and reproducibility via a Nextflow-based framework.
+* Scalability and reproducibility via a Nextflow-based framework
+* Easy deploy with docker
 
 ### TO-DO(s)  
-* Dockerize each module
+* Make docker outputs not root owned
 
 ---
 
@@ -74,20 +75,23 @@ git clone https://github.com/Iaguilaror/nf-bcl2counts_10X.git
 
 ---
 
-#### Test
-To test pipeline execution using test data, run:
+## Testing the module:
+
+* Estimated test time:  **4 minute(s)**  
+
+1. To test pipeline execution using test data, run:  
 ```
 ./runtest.sh
 ```
 
-Your console should print the Nextflow log for the run, once every process has been submitted, the following message will appear:
+2. Your console should print the Nextflow log for the run, once every process has been submitted, the following message will appear:  
 ```
 ======
  Basic pipeline TEST SUCCESSFUL
 ======
 ```
 
-Pipeline results for test data should be in the following file:
+3. Pipeline results for test data should be in the following file:  
 ```
 nf-bcl2counts_10X/test/results/bcl2fastq_10X-results/
 ```
@@ -150,6 +154,30 @@ Lane,Sample,Index
 
 ---
 
+### Docker usage
+
+* Make sure that docker is installed in your linux machine, and that your user is in the "docker" group
+
+To run the Docker version of nf-bcl2counts_10X go to the pipeline directory and execute:
+```
+nextflow run main.nf \
+--input_dir   <path to BCL directory> \
+--output_dir    <path to results> \
+--reference   <path to reference directory for cellranger; will be created> \
+--ref_url   <URL to download the .tar.gz cellranger reference> \
+--samplesheet   <path to the .csv file with samplesheet data> \
+--mkfastq_nproc   <number of CPU threads for cellranger mkfastq> \
+--mkfastq_maxmem    <max RAM for cellranger mkfastq> \
+--counts_nproc    <number of CPU threads for cellranger count> \
+--counts_maxmem   <max RAM for cellranger count> \
+--chemistry   <Chemistry type. By default is "auto> \
+--seurat_nfeatures    <nFeature_RNA cutoff for filtering cells with less than this value> \
+--seurat_nneighbors   <number of neighboring points used in local approximations for UMAP> \
+-resume   (resume pipeline run from the last sucessful process) \
+-with-docker iaguilaror/bcl2counts10x
+```
+
+---
 #### References
 Under the hood nf-bcl2counts_10X uses some coding tools, please include the following ciations in your work:
 
