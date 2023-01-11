@@ -75,13 +75,35 @@ git clone https://github.com/Iaguilaror/nf-bcl2counts_10X.git
 
 ---
 
-## Testing the module:
+## Testing the pipeline:
 
-* Estimated test time:  **4 minute(s)**  
+* Estimated test time:  **40 minute(s)**  
 
 1. To test pipeline execution using test data, run:  
 ```
 ./runtest.sh
+```
+
+2. Your console should print the Nextflow log for the run, once every process has been submitted, the following message will appear:  
+```
+======
+ Basic pipeline TEST SUCCESSFUL
+======
+```
+
+3. Pipeline results for test data should be in the following file:  
+```
+nf-bcl2counts_10X/test/results/bcl2fastq_10X-results/
+```
+---
+
+## Testing the pipeline with Docker:
+
+* Estimated test time:  **40 minute(s)**  
+
+1. To test pipeline execution using test data, run:  
+```
+./runtest-withdocker.sh
 ```
 
 2. Your console should print the Nextflow log for the run, once every process has been submitted, the following message will appear:  
