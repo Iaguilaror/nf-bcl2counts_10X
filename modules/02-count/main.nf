@@ -19,6 +19,16 @@ process separate_samples {
     | split -l 1 - chunk_
     """
 
+    stub:
+    """
+    echo -e "1,test_sample,SI-P03-C9,
+    1,test_sample2,SI-P03-C9," \
+    | cut -d"," -f2 \
+    | sort -u \
+    | sed 's#\$#_cellrangercounts#' \
+    | split -l 1 - chunk_
+    """
+
 }
 
 process counts {
@@ -26,24 +36,24 @@ process counts {
 	publishDir "${params.results_dir}/count/", mode:"copy"
 
     input:
-        path SAMPLENAME
-        path FASTQDIR
-        path TRANSCRIPTOME
+        path MATERIALS
 
     output:
         path "*", emit: counts_results
     
     script:
     """
-    # create the outputdir
-    outputdir=\$( cat $SAMPLENAME )
+    # define the outputdir
+    outputdir=\$( cat chunk_* )
+    # define the reference dir
+    transcriptome=\$( basename ${params.reference} )
+    # define sample
+    sample=\$( cat cat chunk_* | sed 's#_cellrangercounts##' ) 
     # find the fastq outs dir
-    sample=\$( cat $SAMPLENAME | sed 's#_cellrangercounts##' )
-    # define sample 
     inputdir=\$( find -L .  -type d -wholename  "*outs/fastq_path" )
     cellranger count \
         --id=\$outputdir \
-        --transcriptome=$TRANSCRIPTOME \
+        --transcriptome=\$transcriptome \
 		--fastqs=\$inputdir \
 		--sample=\$sample \
 		--localcores=${params.counts_nproc} \
@@ -52,6 +62,19 @@ process counts {
 		--no-bam \
 		--nosecondary \
 		--chemistry=${params.chemistry}
+    """
+    
+    stub:
+    """
+    # define the outputdir
+    outputdir=\$( cat chunk_* )
+    # define the reference dir
+    transcriptome=\$( basename ${params.reference} )
+    # define sample
+    sample=\$( cat cat chunk_* | sed 's#_cellrangercounts##' ) 
+    # find the fastq outs dir
+    inputdir=\$( find -L .  -type d -wholename  "*outs/fastq_path" )
+    mkdir \$outputdir
     """
 
 }
@@ -64,10 +87,14 @@ workflow CELLRANGER_COUNTS {
         transcriptome_ch
 
     main:
-        def samplesheet_ch = Channel.fromPath( params.samplesheet )     // channel defined from path requires the "def" at line start
+        samplesheet_ch = Channel.fromPath( params.samplesheet )     // channel defined from path requires the "def" at line start
         samplenames_ch = separate_samples( samplesheet_ch ) | flatten   // saving a channel with the result of the process, flattened
 
-        counts( samplenames_ch, fastqdir, transcriptome_ch )
+        count_materials = samplenames_ch
+        .combine( fastqdir )
+        .combine( transcriptome_ch )
+        
+        counts( count_materials )
     
     emit:
         counts.out[0]
