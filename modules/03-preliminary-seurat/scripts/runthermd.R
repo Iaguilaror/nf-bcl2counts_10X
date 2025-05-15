@@ -1,4 +1,7 @@
 # This script exists as an interface to pass parameters to RMD in an ordered manner
+tinytex::uninstall_tinytex()
+tinytex::install_tinytex()
+tinytex::tlmgr_install("grffile")
 
 ## Read args from command line
 args = commandArgs( trailingOnly = TRUE )
